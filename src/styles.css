@@ -1,1 +1,256 @@
 /* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+html,
+body {
+  max-width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+* {
+  @apply transition-colors duration-500 ease-in-out
+}
+
+/* Hide scrollbar for Webkit-based browsers */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* // To cover every text (span) */
+span{
+  letter-spacing: -0.025em;
+}
+
+
+input, textarea, .custom-table {
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+  /* // cursor: pointer;
+  // border: 1px solid #E0E2E7 */
+}
+
+/* Hide number input spinners for Chrome, Safari, Edge, Opera */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none;
+  margin: 0; 
+}
+/* Hide number input spinners for Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+input,
+select:focus {
+  outline: none;
+}
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("/icons/chevron-down.svg");
+  background-repeat: no-repeat;
+  background-position: 95%;
+  background-size: 0.6rem;
+  padding-right: 1.5rem;
+  cursor: pointer;
+}
+
+
+option:disabled {
+  color: #667085; /* Your desired text color for disabled option */
+  background-color: #f0f0f0; /* Optional: Background color */
+  font-style: italic; /* Optional: Italicize the text */
+}
+
+
+
+
+
+/* // Fonts
+
+// Poppins font */
+
+@font-face {
+  font-family: "Geist-Thin";
+  src: local("Geist Thin"),
+    url("/fonts/Geist/Geist-Thin.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Geist-Light";
+  src: local("Geist Light"),
+    url("/fonts/Geist/Geist-Light.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Geist-Regular";
+  src: local("Geist Regular"),
+    url("/fonts/Geist/Geist-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Geist-Medium";
+  src: local("Geist Medium"),
+    url("/fonts/Geist/Geist-Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Geist-SemiBold";
+  src: local("Geist SemiBold"),
+    url("/fonts/Geist/Geist-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Geist-Bold";
+  src: local("Geist Bold"),
+    url("/fonts/Geist/Geist-Bold.ttf") format("truetype");
+}
+
+.G-Thin{
+  font-family: 'Geist-Thin';
+}
+
+.G-Light{
+  font-family: 'Geist-Light';
+}
+
+.G-Regular{
+  font-family: 'Geist-Regular';
+}
+
+.G-Medium{  
+  font-family: 'Geist-Medium';
+}
+
+.G-SemiBold{
+  font-family: 'Geist-SemiBold';
+}
+
+.G-Bold{
+  font-family: 'Geist-Bold';
+}
+
+
+
+
+
+.word span.cursor {
+    position: relative; /* Needed for pseudo-element positioning */
+    /* background-color: rgba(0, 0, 255, 0.2); Example: light blue background */
+  }
+  
+  /* Blinking cursor effect using a pseudo-element */
+  .word span.cursor::before {
+    content: '';
+    position: absolute;
+    left: -2px; /* Position slightly to the left */
+    top: 10%; /* Adjust vertical position */
+    bottom: 10%;
+    width: 2px; /* Cursor width */
+    /* height: 100%; */
+    background-color: var(--color-text-secondary); /* Use theme color or a fixed color like blue */
+    animation: blink 1s infinite;
+  }
+  
+  /* Special handling for space character cursor */
+   .word span.cursor:empty::before { /* Target space represented by &nbsp; which makes span empty */
+      left: 2px; /* Adjust position for space */
+      background-color: var(--color-text-secondary); /* Ensure visibility */
+   }
+  
+  
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+
+
+
+
+  .content-grid {
+    --padding-inline: 2rem;
+    --content-max-width: 1536px;
+    --breakout-size: calc((calc(var(--content-max-width) + 12rem) - var(--content-max-width)) / 2);
+    justify-content: center;
+    display: grid;
+    grid-template-columns: [full-width-start] var(--padding-inline) [full-width-padding-start] minmax(0, 1fr) [breakout-start] minmax(0, var(--breakout-size)) [content-start] min(100% - var(--padding-inline) * 2, var(--content-max-width)) [content-end] minmax(0, var(--breakout-size)) [breakout-end] minmax(0, 1fr) [full-width-padding-end] var(--padding-inline) [full-width-end];
+}
+
+
+@theme {
+  --color-accent: #CBA6F7;
+  --color-bg-primary: #1E1E2E;
+  --color-text-primary: #7F849C;
+  --color-text-secondary: #CDD6F4;
+}
+
+
+/* .theme-first{
+    --color-bg-primary: #191F28;
+    --color-text-primary: #4B5975;
+    --color-text-secondary: #C69E69;
+}
+
+.theme-second{
+    --color-bg-primary: #331832;
+    --color-text-primary: #694D75;
+    --color-text-secondary: #1B5299;
+}
+
+.theme-third{
+    --color-bg-primary: #260C1A;
+    --color-text-primary: #432E36;
+    --color-text-secondary: #5F4842;
+}
+
+
+.theme-fourth{
+    --color-bg-primary: #96BBBB;
+    --color-text-primary: #618985;
+    --color-text-secondary: #414535;
+} */
+
+/* .theme-fifth{
+    --color-bg-primary: #FFBA49;
+    --color-text-primary: #20A39E;
+    --color-text-secondary: #EF5B5B;
+} */
+
+
+.theme-first{
+  --color-accent: #CBA6F7;
+  --color-bg-primary: #1E1E2E;
+  --color-text-primary: #7F849C;
+  --color-text-secondary: #CDD6F4;
+}
+
+.theme-second{
+  --color-accent: #E55150;
+  --color-bg-primary: #6E2627;
+  --color-text-primary: #FF6060;
+  --color-text-secondary: #FAA;
+}
+
+.theme-third{
+  --color-accent: #8E2949;
+  --color-bg-primary: #FDF0D5;
+  --color-text-primary: #D91C81;
+  --color-text-secondary: #3A3335;
+}
+
+.theme-fourth{
+  --color-accent: #FD77D7;
+  --color-bg-primary: #141221;
+  --color-text-primary: #676E8A;
+  --color-text-secondary: #DCE5ED;
+}
