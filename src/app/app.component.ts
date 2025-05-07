@@ -16,9 +16,23 @@ export class AppComponent implements AfterViewInit {
 
   title = 'typing-test-game';
   themes = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'];
+  time = [15, 30, 60, 120]
   selectedTheme = this.themes[0];
   allWords: CharacterStatus[] = [];
   oneWord: CharacterStatus[][] = [];
+
+  // for timer
+  timerID: any;
+  timeLeft: number = 0
+  selectedTime: number = 0
+  isTimerActive: boolean = false
+  hasTypingStarted: boolean = false;
+
+  // for results
+
+  calculatedWPM: number = 0
+  calculatedAccuracy: number = 0
+  showResults: boolean = false;
 
   // For scroll position calculations 
   cursorRect: number = 0
@@ -27,6 +41,10 @@ export class AppComponent implements AfterViewInit {
   lastValidCursorTop: number | null = null;
   absoluteCursorTop: number = 0
   verticalScrollPosition: number = 0;
+  lineHeight: number = 0
+
+  previousAbsoluteCursorTop: number | null = null; // Stores the absolute top position from the PREVIOUS calculation
+
 
   
 
@@ -43,36 +61,205 @@ export class AppComponent implements AfterViewInit {
 
   ngOnInit(): void {
     this.generateWords();
-    console.log(this.oneWord);
+    
+    // console.log(this.oneWord);
   }
 
 
   ngAfterViewInit(): void {
     this.inputElement?.nativeElement.focus();
+    setTimeout(() => {
+      this.calculateAndStoreInitialPosition()
+      console.log('Position: ' ,this.verticalScrollPosition)
 
-    const divElement: HTMLDivElement = document.getElementById('words-wrapper') as HTMLDivElement;
+    }, 0)
 
-    const spanCursor = divElement.querySelector('.cursor') as HTMLElement | null;
-    this.verticalScrollPosition = divElement.scrollTop;
-    console.log('Scroll Position at component initialization: ', this.verticalScrollPosition)
+    // console.log('Position: ' ,this.verticalScrollPosition)
 
-    this.getCalculations();
+    // const divElement: HTMLDivElement = document.getElementById('words-wrapper') as HTMLDivElement;
+
+    // this.verticalScrollPosition = divElement.scrollTop;
+    // console.log('Scroll Position at component initialization: ', this.verticalScrollPosition)
+
+    // const spanCursor = divElement.querySelector('.cursor') as HTMLElement | null;
+
+    // if(spanCursor){
+    //   this.cursorRect = Math.round(spanCursor.getBoundingClientRect().top)
+    //   this.wrapperRect = Math.round(divElement.getBoundingClientRect().top)
+    //   this.distanceViaRect = this.cursorRect - this.wrapperRect;
+    //   this.absoluteCursorTop = this.verticalScrollPosition + this.distanceViaRect
+    //   localStorage.setItem('previousAbsoluteCursorTop', this.absoluteCursorTop.toString())
+    //   console.log(`Cursor position updated: ${this.absoluteCursorTop}`); 
+    // }
+    
   }
 
-
-  getCalculations(){
+  calculateAndStoreInitialPosition() {
     const divElement: HTMLDivElement = document.getElementById('words-wrapper') as HTMLDivElement;
+    if (!divElement) return;
     const spanCursor = divElement.querySelector('.cursor') as HTMLElement | null;
 
-    if(spanCursor){
-      this.cursorRect = Math.round(spanCursor.getBoundingClientRect().top)
-      this.wrapperRect = Math.round(divElement.getBoundingClientRect().top)
-      this.distanceViaRect = this.cursorRect - this.wrapperRect;
-      this.lastValidCursorTop = this.distanceViaRect;
-      console.log(`Cursor position updated: ${this.lastValidCursorTop}`);
+    if (spanCursor) {
+        const currentScrollTop = divElement.scrollTop; // Should be 0 initially, but read just in case
+        const cursorRect = spanCursor.getBoundingClientRect();
+        const wrapperRect = divElement.getBoundingClientRect();
+
+        // Calculate initial absolute top
+        const currentRelativeTop = Math.round(cursorRect.top - wrapperRect.top);
+        const initialAbsoluteTop = currentScrollTop + currentRelativeTop;
+
+        // Store it as the "previous" value for the first comparison later
+        this.previousAbsoluteCursorTop = initialAbsoluteTop;
+        // Store line height as well
+        this.lineHeight = Math.round(cursorRect.height);
+
+        console.log(`Initial Position Calculated -> Absolute Top: ${this.previousAbsoluteCursorTop}, Line Height: ${this.lineHeight}`);
+    } else {
+        console.warn("Could not find initial cursor to calculate position.");
     }
+}
 
+changeTime(time: any){
+  this.timeLeft = time
+  this.selectedTime = time
+  this.inputElement?.nativeElement.focus(); // Keep focus on input after time change
+}
+
+restartGame(){
+  this.oneWord.splice(0, 99)
+  this.generateWords()
+}
+
+resetTimer(){
+  // reset time and set variable to false
+  this.stopTimer();
+  this.timeLeft = this.time[0]
+  this.selectedTime = this.timeLeft
+  this.hasTypingStarted = false
+}
+
+stopTimer(){
+  if(this.timerID){
+    clearInterval(this.timerID)
+    this.timerID = null
+    this.isTimerActive = false
   }
+}
+
+handleTimeUp(){
+  // calculate WPM and accuracy
+  console.log('Time up nigga!')
+  let correctCharacterCount = 0
+  let totalAttemptedCharacters = 0
+
+  this.oneWord.forEach(wordArray => {
+    wordArray.forEach(char => {
+      if(char.status === 'correct'){
+        correctCharacterCount++
+        totalAttemptedCharacters++
+      }else if(char.status === 'incorrect'){
+        totalAttemptedCharacters++
+      }
+    })
+  });
+
+  // let wpm = 0
+  if(correctCharacterCount > 0){
+
+    switch(this.selectedTime){
+      case 15: {
+        this.calculatedWPM = (correctCharacterCount / 5) / 0.25
+        break;
+      }
+
+      case 30: {
+        this.calculatedWPM = (correctCharacterCount / 5) / 0.5
+        break;
+      }
+
+      case 60: {
+        this.calculatedWPM = (correctCharacterCount / 5) / 1
+        break;
+      }
+
+      case 120: {
+        this.calculatedWPM = (correctCharacterCount / 5) / 2
+        break;
+      }
+
+      default: {
+        console.log("Invalid choice");
+        break;
+     }
+
+    }
+    // this.calculatedWPM = (correctCharacterCount / 5) / 0.5
+  }
+
+  // let accuracy = 0
+  if(totalAttemptedCharacters > 0){
+    this.calculatedAccuracy = (correctCharacterCount / totalAttemptedCharacters) * 100
+  }else{
+   this.calculatedAccuracy = 0
+  }
+
+  console.log('WPM: ', this.calculatedWPM)
+
+  console.log('Accuracy: ', this.calculatedAccuracy)
+  this.showResults = true;
+
+  // Disable input to prevent any further typing
+  if(this.inputElement && this.inputElement.nativeElement){
+    this.inputElement.nativeElement.disabled = true;
+  }
+
+}
+
+startTimer(){
+  if(this.isTimerActive){
+    return;
+  }
+
+  this.isTimerActive = true
+  // this.timeLeft = 15
+
+  this.timerID = setInterval(() => {
+    const newTime = this.timeLeft--
+    // this.timeLeft = newTime
+    console.log(newTime)
+
+    if(this.timeLeft <= 0){
+      this.stopTimer();
+      this.handleTimeUp();
+    }
+  }, 1000)
+}
+
+
+  // getCalculations(){
+  //   const divElement: HTMLDivElement = document.getElementById('words-wrapper') as HTMLDivElement;
+  //   const spanCursor = divElement.querySelector('.cursor') as HTMLElement | null;
+
+
+  //   if(spanCursor){
+  //     this.cursorRect = Math.round(spanCursor.getBoundingClientRect().top)
+  //     this.wrapperRect = Math.round(divElement.getBoundingClientRect().top)
+  //     this.lineHeight = Math.round(spanCursor.getBoundingClientRect().height)
+  //     console.log('Line height: ', this.lineHeight)
+  //     this.distanceViaRect = this.cursorRect - this.wrapperRect;
+  //     this.absoluteCursorTop = this.verticalScrollPosition + this.distanceViaRect
+
+  //     // this.lastValidCursorTop = this.distanceViaRect;
+  //     console.log(`Cursor position updated: ${this.absoluteCursorTop}`);
+  //   }
+
+
+  // }
+
+  // @HostListener('document:scroll', ['$event'])
+  // handleScroll(){
+  //   console.log('Position: ' ,this.verticalScrollPosition)
+  // }
 
   @HostListener('document:keydown', ['$event']) // Listen for keydown events globally
   handleKeyboardEvents(event: KeyboardEvent) {
@@ -94,6 +281,18 @@ export class AppComponent implements AfterViewInit {
     this.currentWordIndex = 0;
     this.currentCharIndex = 0;
     this.isWordFinished = false;
+
+    // this.changeTime(this.time[0])
+    this.resetTimer();
+
+    if(this.inputElement && this.inputElement.nativeElement){
+      this.inputElement.nativeElement.disabled = false;
+    }
+
+    this.showResults = false
+    this.calculatedWPM = 0
+    this.calculatedAccuracy = 0
+
 
     // Generate random words from our pool of words
     const allWords = this.textProvider.getRandomWords(100);
@@ -121,7 +320,10 @@ export class AppComponent implements AfterViewInit {
       // Push each word's splitted objects as well into the oneWord array,
       // so that you have each word as an array of its characters splitted into objects
       this.oneWord.push(aWord);
+      console.log('Some word bi: ', aWord)
     });
+
+    // console.log(this.oneWord)
   }
 
   // Handles character input from the hidden text input
@@ -136,12 +338,24 @@ export class AppComponent implements AfterViewInit {
     (inputEvent.target as HTMLInputElement).value = '';
   }
 
-  processWords(typedCharacter: string) {
-    console.log('Scroll position before letter press: ', this.verticalScrollPosition)
 
-    const divElement: HTMLDivElement = document.getElementById(
-      'words-wrapper'
-    ) as HTMLDivElement;
+  processWords(typedCharacter: string) {
+    // Initially check whether hasTypingStarted is false. 
+    // If it is, make it true to start
+
+    if(!this.hasTypingStarted){
+      this.hasTypingStarted = true
+      this.startTimer()
+    }
+    // console.log('Scroll position before letter press: ', this.verticalScrollPosition)
+
+    // const divElement: HTMLDivElement = document.getElementById(
+    //   'words-wrapper'
+    // ) as HTMLDivElement;
+
+    // const scrollTopBeforeUpdate = divElement.scrollTop;
+    // console.log('Scroll position at start of processWords: ', scrollTopBeforeUpdate);
+
     // Establish both the current word and current characters
     let currentWord = this.oneWord[this.currentWordIndex];
     let currentChar = currentWord[this.currentCharIndex];
@@ -151,29 +365,6 @@ export class AppComponent implements AfterViewInit {
     if (typedCharacter !== 'Backspace') {
       // We pass it to the core logic
       this.processAWord(typedCharacter, currentChar, currentWord);
-
-      // Optionally update lastValidCursorTop on backspace too
-      // const cursorRect = Math.round(spanCursor.getBoundingClientRect().top)
-      // const wrapperRect = Math.round(divElement.getBoundingClientRect().top)
-      // console.log(`Both cursorRect and wrapperRect: ${cursorRect} & ${wrapperRect}`)
-      // const distanceViaRect: number | null = cursorRect - wrapperRect;
-      this.getCalculations();
-      this.absoluteCursorTop = this.verticalScrollPosition + this.distanceViaRect;
-
-      console.log('Absolute Cursor Top: ', this.absoluteCursorTop)
-
-      if(this.lastValidCursorTop !== null && this.absoluteCursorTop > this.lastValidCursorTop){
-        this.verticalScrollPosition = this.absoluteCursorTop
-        console.log(`New line! last vaid cursor top and current are: ${this.lastValidCursorTop} and ${this.absoluteCursorTop}`)
-        divElement.scrollTo({ top: this.absoluteCursorTop, behavior: 'smooth' });
-
-        this.lastValidCursorTop = this.absoluteCursorTop
-        console.log('New distance value: ', this.lastValidCursorTop)
-      }else{
-        console.log('Same old distance: ', this.lastValidCursorTop)
-        console.log('Scroll Position now: ', this.verticalScrollPosition)
-
-      }
 
     } else {
       // IF backspace is pressed, move the index back by 1
@@ -190,21 +381,6 @@ export class AppComponent implements AfterViewInit {
 
         currentChar.status = 'active';
       }
-      // Defer DOM check even for backspace if needed for consistency or future features
-    //   setTimeout(() => {
-    //     const spanCursor = divElement.querySelector('.cursor') as HTMLElement | null;
-    //     if (spanCursor) {
-    //         // Optionally update lastValidCursorTop on backspace too
-    //         const cursorRect = spanCursor.getBoundingClientRect();
-    //         const wrapperRect = divElement.getBoundingClientRect();
-    //         const distanceViaRect = cursorRect.top - wrapperRect.top;
-    //         console.log(distanceViaRect)
-    //         this.lastValidCursorTop = distanceViaRect; // Update on backspace if cursor visible
-    //         console.log(`Cursor position updated after backspace: ${this.lastValidCursorTop}`);
-    //     } else {
-    //         console.warn('Cursor not found after backspace.');
-    //     }
-    // }, 0);
     }
   }
 
@@ -214,6 +390,15 @@ export class AppComponent implements AfterViewInit {
     currentChar: CharacterStatus,
     currentWord: CharacterStatus[]
   ) {
+    // console.log('Scroll position before letter press: ', this.verticalScrollPosition)
+
+    const divElement: HTMLDivElement = document.getElementById(
+      'words-wrapper'
+    ) as HTMLDivElement;
+
+    const scrollTopBeforeUpdate = divElement.scrollTop;
+    console.log('Scroll position at start of processWords: ', scrollTopBeforeUpdate);
+    
     // We check whether they're equal
     // (user input and desired character)
     if (typedCharacter === currentChar.char) {
@@ -235,5 +420,94 @@ export class AppComponent implements AfterViewInit {
       this.currentCharIndex = 0;
       this.currentWordIndex++;
     }
+
+
+    // setTimeout(() => {
+    //   const spanCursor = divElement.querySelector('.cursor') as HTMLElement | null;
+
+    //   if(spanCursor){
+    //     // Get current measurements
+    //     const currentScrollTop = scrollTopBeforeUpdate;
+    //     const cursorRect = spanCursor.getBoundingClientRect();
+    //     const wrapperRect = divElement.getBoundingClientRect();
+
+    //     // update line height again (might change depending on character)
+    //     this.lineHeight = Math.round(cursorRect.height);
+
+    //     // Calculate current relative top
+    //     const currentRelativeTop = Math.round(cursorRect.top - wrapperRect.top);
+
+    //     // Calculate current absolute top
+    //     const currentAbsoluteTop = currentScrollTop + currentRelativeTop;
+
+    //     console.log(`Current State -> ScrollTop: ${currentScrollTop}, RelativeTop: ${currentRelativeTop}, AbsoluteTop: ${currentAbsoluteTop}, LineHeight: ${this.lineHeight}`);
+
+    //     if (this.previousAbsoluteCursorTop !== null && this.lineHeight > 0) {
+    //         // Check if the absolute position increased significantly (more than half a line)
+    //         // const threshold = this.previousAbsoluteCursorTop + (this.lineHeight * 0.5);
+    //         if (currentAbsoluteTop > this.previousAbsoluteCursorTop) {
+    //             console.log(`%cNew line detected! Prev Abs Top: ${this.previousAbsoluteCursorTop}, Curr Abs Top: ${currentAbsoluteTop}`, 'color: green; font-weight: bold;');
+
+    //             // --- Trigger Scroll Logic ---
+    //             const newScrollTop = currentScrollTop + this.lineHeight; // Scroll down by one line height
+    //             console.log(`Calculated new scroll target: ${newScrollTop}`);
+
+    //             // Cap scroll amount at the maximum possible scroll position
+    //             const maxScrollTop = divElement.scrollHeight - divElement.clientHeight;
+    //             console.log(`${divElement.scrollHeight} - ${divElement.clientHeight}`)
+    //             const cappedScrollTop = Math.min(newScrollTop, maxScrollTop);
+
+    //             if (cappedScrollTop > currentScrollTop) { // Ensure we are actually scrolling down
+    //                  console.log(`Scrolling to: ${cappedScrollTop}`);
+    //                  divElement.scrollTo({ top: cappedScrollTop });
+    //             } else {
+    //                  console.log('Scroll target not greater than current scroll position or max scroll reached.');
+    //             }
+    //         } else {
+    //             console.log('Same line detected (Absolute position change within threshold).');
+    //         }
+    //     }else {
+    //       console.log('First calculation or invalid line height, cannot compare.');
+    //     }
+
+    //     this.previousAbsoluteCursorTop = currentAbsoluteTop;
+        
+    //   }else {
+    //     console.warn("Could not find .cursor element after update.");
+    //   }
+
+
+    //   // const retrievedValue = localStorage.getItem('previousAbsoluteCursorTop')
+    //   // let convertedValue: number | null = null;
+
+    //   // if(retrievedValue !== null){
+    //   //   convertedValue = parseInt(retrievedValue, 10);
+    //   // }
+
+    //   // if(convertedValue !== null && !isNaN(convertedValue) && this.absoluteCursorTop !== null){
+    //   //   console.log(`Comparing current relative top (${this.absoluteCursorTop}) with stored relative top (${convertedValue})`);
+
+    //   //   if(this.absoluteCursorTop > convertedValue){
+    //   //     console.log(`%cNew line detected! Stored: ${convertedValue}, Current: ${this.absoluteCursorTop}`, 'color: blue; font-weight: bold;');
+
+    //   //     // Read current scroll position
+    //   //     const currentScrollTop = divElement.scrollTop;
+    //   //     console.log(`Current scroll top before calculating new target: ${currentScrollTop}`);
+
+    //   //     // calculate new target scroll position
+    //   //     const newScrollTop = currentScrollTop + this.lineHeight;
+    //   //     console.log(`Calculated new scroll target: ${newScrollTop} (current: ${currentScrollTop} + lineHeight: ${this.lineHeight})`);
+
+    //   //     divElement.scrollTo({ top: newScrollTop, behavior: 'smooth' });
+  
+    //   //     localStorage.setItem('previousAbsoluteCursorTop', this.absoluteCursorTop.toString())
+    //   //     console.log(`Stored new relative position: ${this.absoluteCursorTop}`);
+
+    //   //   }else{
+    //   //     console.log('Same old distance: ', this.absoluteCursorTop)
+    //   //     console.log('Scroll Position now: ', this.verticalScrollPosition)
+    //   //   }
+    //   // }
+    // }, 0)
   }
 }
