@@ -4,15 +4,18 @@ import { ButtonComponent } from '../components/button.component';
 import { ToastService } from '../services/toast.service';
 import { ToastComponent } from '../components/toast/toast.component';
 import { RouterOutlet } from '@angular/router';
-import { AppTheme, Toast } from '../models/data.models';
+import { AppTheme, LobbyData, Toast } from '../models/data.models';
 import gsap from 'gsap';
 import { Subscription } from 'rxjs';
 import { ThemeService } from '../services/theme.service';
+import { InputRegularComponent } from '../components/inputs/input-regular.component';
+import { LobbyService } from '../services/lobby.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, ToastComponent, RouterOutlet],
+  imports: [CommonModule, ToastComponent, FormsModule, RouterOutlet, ButtonComponent, InputRegularComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -21,14 +24,25 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   toastHeader: string = '';
   selectedTheme!: AppTheme; // This will hold the theme class name
   private themeSubscription!: Subscription;
+  isMultiplayerMode: boolean = false
+  lobbyCodeForJoining = ''
+  
+  playerName = '';
+  multiplayerStatus: any = ''
+  currentLobby: LobbyData | null = null;
+  private subscriptions: Subscription = new Subscription();
 
   textAnimationComplete: boolean = false;
 
 
-  constructor(private toastService: ToastService, public themeService: ThemeService) {}
+  constructor(private toastService: ToastService, public themeService: ThemeService, private lobbyService: LobbyService) {}
 
 
   ngOnInit(): void{
+
+    this.webSocketConnections();
+
+    // Subscribe to theme changes
 
     this.themeSubscription = this.themeService.currentThemeClassName$.subscribe(themeClass => {
       this.selectedTheme = themeClass;
@@ -145,9 +159,95 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+
+  webSocketConnections(){
+    // Web socket connections
+    this.subscriptions.add(
+      this.lobbyService.onLobbyCreated().subscribe(
+        (lobby) => {
+        console.log('Component: Lobby created with code:', lobby.code);
+        this.currentLobby = lobby;
+        this.toastService.showToast('Lobby Created', `Your lobby code was created successfully!`);
+        }
+    ));
+
+    this.subscriptions.add(
+      this.lobbyService.onJoinedLobby().subscribe(
+        (lobbyData) => {
+          console.log('Component: Successfully joined lobby:', lobbyData);
+          this.currentLobby = lobbyData;
+          this.toastService.showToast('Lobby Joined', `You joined lobby ${this.currentLobby.code} succesfully!`);
+        }
+      )
+    );
+
+    this.subscriptions.add(
+      this.lobbyService.onPlayerJoined().subscribe(
+        (playerJoinInfo) => {
+          console.log('Component: A new player joined:', playerJoinInfo);
+          this.toastService.showToast('New Player!', `${playerJoinInfo.playerName} has joined the lobby!`);
+
+          if (this.currentLobby) {
+            // Update the player list in the current lobby
+            this.currentLobby.players = playerJoinInfo.players;
+          }
+          // Update UI
+        }
+      )
+    );
+
+    this.subscriptions.add(
+      this.lobbyService.onLobbyError().subscribe(
+        (errorMsg) => {
+          // this.errorMessage = errorMsg;
+          console.error('Component: Lobby error:', errorMsg);
+          // Display error to user
+        }
+      )
+    );
+  }
+
+  toggleMultiplayerDialog(){
+    this.isMultiplayerMode = !this.isMultiplayerMode
+  }
+
+  toggleMultiplayerStatus(status: 'join-game' | 'create-game') {
+    this.multiplayerStatus = status;
+    this.lobbyCodeForJoining = ''; // Reset lobby code for joining
+    this.playerName = ''; // Reset player name
+    this.lobbyCodeForJoining = ''; // Reset lobby code after creating a lobby
+  }
+
+
+  createLobby() {
+    if (this.playerName.trim()) {
+      this.lobbyService.createLobby(this.playerName.trim());
+    } else {
+      console.log("Please enter a player name.");
+    }
+  }
+
+  joinLobby(){
+    const data = {
+      code: this.lobbyCodeForJoining.trim(),
+      playerName: this.playerName.trim()
+    }
+
+    if(data.playerName && data.code){
+      console.log('Joining lobby with data: ', data);
+      this.lobbyService.joinLobby(data);
+    }else{
+      console.log("misssing player name or lobby code");
+    }
+
+  }
+
   ngOnDestroy(): void {
     if (this.themeSubscription) {
       this.themeSubscription.unsubscribe();
     }
+
+    this.subscriptions.unsubscribe(); // Unsubscribe from all subscriptions
+
   }
 }

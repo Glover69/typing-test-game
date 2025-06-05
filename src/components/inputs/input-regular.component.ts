@@ -14,7 +14,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@a
 
          <input
            [attr.minlength]="minLength"
-           class="focus:outline-none rounded-lg py-2 w-full placeholder:text-gray-900 placeholder:text-sm G-Light"
+           class="focus:outline-none border-b border-accen text-accent py-2 w-full placeholder:text-gray-900 placeholder:text-sm G-Light"
            [placeholder]="placeholder"
            [type]="type"
            [value]="value"
