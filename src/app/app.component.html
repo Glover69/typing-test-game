@@ -1,91 +1,37 @@
 
-<section class="entire-component flex flex-col justify-around gap-4 py-16 px-24 w-full h-full bg-bg-primary theme-{{selectedTheme}}">
+<router-outlet></router-outlet>
 
-  @if (!isTimerActive) {
-    <div class="top flex flex-col gap-4">
-      <span class="G-Light text-xl text-text-primary tracking-tight">Hello There</span>
-  
-      <span class="G-Medium text-5xl text-accent tracking-tight">Hello There</span>
-    </div>
-  }
+<section class="entire-component relative flex flex-col items-center justify-center gap-6 py-16 px-24 w-full h-full bg-bg-primary">
+  <span [ngClass]="{'glowing-effect': textAnimationComplete === true }" class="main-txt text-9xl font-extrabold tracking-tight text-center M-Regular text-accent"></span>
 
-  @if (showResults) {
-    <div class="flex flex-col items-center justify-center">
-      <div class="results w-full flex items-center justify-center gap-12">
-        <div class="flex flex-col items-center gap-3">
-          <span class="G-Regular text-xl text-text-primary">WPM (Words Per Minute)</span>
-          <span class="G-SemiBold text-6xl text-accent">{{calculatedWPM}}</span>
-        </div>
-  
-        <div class="flex flex-col items-center gap-3">
-          <span class="G-Regular text-xl text-text-primary">Accuracy</span>
-          <span class="G-SemiBold text-6xl text-accent">{{calculatedAccuracy | number:'1.0-0'}}</span>
-        </div>
-      </div>
-    </div>
+  <div class="button-holder opacity-0 flex items-center gap-12">
+    <!-- <app-button variant="primary" type="button" label="Local" class="flex-shrink-0"></app-button>
+    <app-button variant="primary" type="button" label="Multiplayer" class="flex-shrink-0"></app-button> -->
+
+    <span class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Local</span>
+    <span class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Multiplayer</span>
+  </div>
 
 
-    @if (this.showResults) {
-      <button (click)="restartGame()" class="w-fit px-4 py-2 rounded-lg flex items-center justify-center G-SemiBold tracking-tight text-text-primary cursor-pointer ">Reset Game</button>
-    }
-    <!-- <span class="text-3xl">Results: </span> -->
-  }@else {
-    <div class="middle flex flex-col items-center gap-4 w-full">
+  <div class="absolute bottom-8 flex items-center justify-between w-full px-16">
+    <div class="left text-accent G-Medium text-sm tracking-tight">Made by Daniel Glover w/ love ❤️</div>
 
-      <div class="time-list flex items-center gap-3">
-        @for (item of time; track $index) {
-          <button (click)="changeTime(item)" [ngClass]="{'text-accent': item === timeLeft, 'text-text-primary': item !== timeLeft}" class="single-time cursor-pointer">{{item}}</button>
-        }
-      </div>
-      <span class="timer-container text-5xl G-SemiBold text-accent">{{timeLeft}}</span>
-  
-  
-      <div id="words-wrapper" class="words-wrapper relative w-full h-[133px] overflow-scroll border-text-secondary">
-        <div class="words h-fit pb-2 flex flex-wrap w-full content-start">
-          @for (word of oneWord; track $index) {
-            <div class="word relative text-3xl G-SemiBold my-1 mx-1.5">
-              @for (char of word; track $index) {
-                <span [ngClass]="{
-                        'text-accent opacity-100': char.status === 'correct',
-                        'text-red-500 opacity-100 underline': char.status === 'incorrect',
-                        'text-text-primary opacity-25': char.status === 'untyped' || char.status === 'active',
-                        'cursor': char.status === 'active'
-                      }" class="char">{{char.char}}</span>
-              }
-            </div>
-          }
-        </div>
-    
-        <input type="text" (input)="onInput($event)" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" class="absolute w-full opacity-0 h-full top-0 left-0 bg-transparent border-none outline-none text-3xl G-SemiBold text-text-primary cursor-text" #inputRef>
-    
-      </div>
-  
-  
-      <!-- @if (this.showResults) {
-        <button (click)="restartGame()" class="w-fit px-4 py-2 rounded-lg flex items-center justify-center G-SemiBold tracking-tight text-text-primary cursor-pointer ">Reset Game</button>
-      } -->
-  
-    </div>
-  }
+    <!-- <div class="middle theme-selector text-text-primary G-Medium tracking-tight">🎨  {{selectedTheme.name}}</div> -->
 
-  @if (!isTimerActive) {
     <div class="theme-selector flex gap-4">
-      @for (item of themes; track $index) {
+      @for (item of themeService.availableThemes; track $index) {
         <div 
-          (click)="onThemeChange(item)" 
+          (click)="changeTheme(item.className)" 
           class="theme cursor-pointer G-Regular text-sm tracking-tight"
-          [ngClass]="{'text-text-primary': item !== selectedTheme, 'text-accent G-Bold': item === selectedTheme}">
-          {{item}}
+          [ngClass]="{'text-text-primary': item.className !== selectedTheme.className, 'text-accent G-Bold': item.className === selectedTheme.className}">
+          {{item.name}}
         </div>
           }
   
     </div>
-  }
-  
+
+    <!-- <div class="right"></div> -->
+  </div>
 </section>
 
-
-
-
-
-
+<app-toast id="toast" [selectedTheme]="selectedTheme.className" class="flex items-center justify-center lg:justify-end" [header]="toastHeader" [message]="toastMessage"></app-toast>

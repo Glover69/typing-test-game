@@ -1,0 +1,45 @@
+/* ...existing styles... */
+
+.main-txt.glowing-effect {
+    /* Make sure you have your base text color defined here or via a utility class like text-accent */
+    /* For example, if your text-accent is a variable: color: var(--accent-color); */
+    transition: text-shadow 0.7s ease-in-out; /* Adjust duration and easing as needed */
+    color: var(--accent-color); /* Fallback color if --accent-color is not defined */
+    /* Glow effect */
+    text-shadow: 0 0 5px var(--accent-color, #fff), /* Softer inner glow */
+                 0 0 10px var(--accent-color, #fff), /* Medium glow */
+                 0 0 15px var(--accent-color, #fff), /* Wider glow */
+                 0 0 20px #ff00de, /* Optional: A different color for a more vibrant outer glow */
+                 0 0 30px #ff00de; /* Optional: Wider outer glow */
+  }
+  
+  /* If you are using Tailwind and text-accent is, for example, a specific color like theme('colors.pink.500'),
+     you might need to define the glow color explicitly or use CSS variables that Tailwind can populate.
+     For simplicity, the example above uses a fallback to #fff and an example #ff00de.
+     Replace these with colors that match your theme.
+     If your text-accent class already sets a color, text-shadow will use that color if you use 'currentColor'.
+  */
+
+
+  .options::after {
+    content: '';
+    position: absolute;
+    bottom: 0; /* Position at the bottom of the .options span */
+    left: 0;
+    width: 0; /* Start with no width */
+    height: 1.5px; /* Thickness of the border line */
+    background-color: var(--color-accent); /* Use your text primary color variable */
+    /* Or use currentColor to match the text color: background-color: currentColor; */
+    transition: width 0.4s ease-out; /* Animation speed and easing */
+    /* transition: color 0.4s ease-out; Animation speed and easing */
+
+  }
+  
+  .options:hover::after {
+    width: 100%; /* Animate to full width on hover */
+    background-color: var(--color-accent); /* Ensure the line color remains consistent or changes as desired */
+  }
+
+  .options:hover {
+    color: var(--color-accent); /* Change text color to white on hover */
+  }

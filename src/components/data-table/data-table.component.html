@@ -1,0 +1,54 @@
+<div class="custom-table w-full flex flex-col">
+
+    <!-- Header row -->
+     @if (totalColumns > 0) {
+        <div [style.grid-template-columns]="`repeat(${totalColumns}, minmax(0, 1fr)`" class="header w-full grid rounded-t-lg bg-white border-b border-gray-200">
+            @for (item of tableHeaders; track $index) {
+                <div [style.grid-column]="'span ' + item.columns" class="item G-Light tracking-tight text-main-black p-4">{{item.title}}</div>
+            }
+        </div>
+     }
+   
+     <!-- Data Rows -->
+      @if (!loading) {
+        <div class="items-group flex flex-col">
+            @for (item of tableData; track $index) {
+                @if (totalColumns > 0) {
+                    <div [routerLink]="routerlink + item[idType + 'ID']" [style.grid-template-columns]="`repeat(${totalColumns}, minmax(0, 1fr)`" class="item grid cursor-pointer hover:bg-gray-50">
+    
+                        @for (header of tableHeaders; track header.key; let headerIndex = $index) {
+                            <div [style.grid-column]="'span ' + header.columns + ' / span ' + header.columns" class="item col-span-2 gap-3 flex items-center G-Regular text-sm tracking-tight text-main-black p-4 ">
+                                
+                                <ng-container
+                                *ngTemplateOutlet="customCellTemplates[header.key] || defaultCellTemplate; context: { $implicit: item, header: header }">
+                                <!-- $implicit passes 'item' as the default let- variable -->
+                                <!-- 'header' passes the header object -->
+                                </ng-container>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+      }@else {
+            <!-- Loader for products -->
+            <div class="flex flex-col items-start gap-4">
+                @for (item of [1,2,3]; track $index) {
+                    <div [style.grid-template-columns]="`repeat(${totalColumns}, minmax(0, 1fr)`" class="item w-full grid cursor-pointer p-4 gap-x-4">
+                        @for (item of tableHeaders; track $index) {
+                            <div [style.grid-column]="'span ' + item.columns" class="item w-24 h-6 rounded-lg bg-gray-200 animate-pulse"></div>
+                        }
+                    </div>
+                 } 
+            </div>
+            
+      }
+    
+
+    <!-- Default Template for cells if no custom one is provided -->
+    <ng-template #defaultCellTemplate let-item let-header="header">
+        <!-- Basic text display, handle potential missing keys gracefully -->
+        <span>{{ item[header.key] !== null && item[header.key] !== undefined ? item[header.key] : '-' }}</span>
+    </ng-template>
+
+</div>

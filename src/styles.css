@@ -77,7 +77,7 @@ option:disabled {
 
 /* // Fonts
 
-// Poppins font */
+// Geist font */
 
 @font-face {
   font-family: "Geist-Thin";
@@ -114,6 +114,20 @@ option:disabled {
   src: local("Geist Bold"),
     url("/fonts/Geist/Geist-Bold.ttf") format("truetype");
 }
+
+
+/* Marlin SOft font */
+
+@font-face {
+  font-family: "Marlin-Regular";
+  src: local("Marlin Regular"),
+    url("/fonts/MarlinSoft/MarlinSoftRegular.otf") format("truetype");
+}
+
+.M-Regular{
+  font-family: 'Marlin-Regular';
+}
+
 
 .G-Thin{
   font-family: 'Geist-Thin';
@@ -227,11 +241,19 @@ option:disabled {
 } */
 
 
-.theme-first{
+/* .theme-first{
   --color-accent: #CBA6F7;
   --color-bg-primary: #1E1E2E;
   --color-text-primary: #7F849C;
   --color-text-secondary: #CDD6F4;
+} */
+
+
+.theme-first{
+  --color-accent: #eee;
+  --color-bg-primary: #111;
+  --color-text-primary: #444;
+  --color-text-secondary: #eee;
 }
 
 .theme-second{
@@ -253,4 +275,12 @@ option:disabled {
   --color-bg-primary: #141221;
   --color-text-primary: #676E8A;
   --color-text-secondary: #DCE5ED;
+}
+
+
+.theme-fifth{
+  --color-accent: #A30100;
+  --color-bg-primary: #FFC8CD;
+  --color-text-primary: #A30100;
+  --color-text-secondary: #FFF;
 }
