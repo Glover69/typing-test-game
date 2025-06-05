@@ -257,9 +257,9 @@ option:disabled {
 }
 
 .theme-second{
-  --color-accent: #E55150;
-  --color-bg-primary: #6E2627;
-  --color-text-primary: #FF6060;
+  --color-accent: #593c8f;
+  --color-bg-primary: #7f95d1;
+  --color-text-primary: #ffd9ce;
   --color-text-secondary: #FAA;
 }
 
@@ -283,4 +283,54 @@ option:disabled {
   --color-bg-primary: #FFC8CD;
   --color-text-primary: #A30100;
   --color-text-secondary: #FFF;
+}
+
+.theme-sixth{
+  --color-accent: #ACD7FF;
+  --color-bg-primary: #212B42;
+  --color-text-primary: #5C7DA5;
+  --color-text-secondary: #ccc;
+}
+
+.theme-seventh{
+  --color-accent: #506477;
+  --color-bg-primary: #DAE0F5;
+  --color-text-primary: #92A4BE;
+  --color-text-secondary: #FF69B4;
+}
+
+/* ...existing styles... */
+
+/* .main-txt.glowing-effect {
+  transition: text-shadow 0.7s ease-in-out; 
+  color: var(--accent-color); 
+
+  text-shadow: 0 0 5px var(--accent-color, #fff),
+               0 0 10px var(--accent-color, #fff),
+               0 0 15px var(--accent-color, #fff),
+               0 0 20px #ff00de,
+               0 0 30px #ff00de;
+} */
+
+
+
+.options::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1.5px; 
+  background-color: var(--color-accent);
+  transition: width 0.4s ease-out;
+
+}
+
+.options:hover::after {
+  width: 100%; /* Animate to full width on hover */
+  background-color: var(--color-accent); /* Ensure the line color remains consistent or changes as desired */
+}
+
+.options:hover {
+  color: var(--color-accent); /* Change text color to white on hover */
 }

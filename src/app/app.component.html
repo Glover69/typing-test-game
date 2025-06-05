@@ -1,125 +1,33 @@
 
 <router-outlet></router-outlet>
 
-<section class="entire-component relative flex flex-col items-center justify-center gap-6 py-16 px-24 w-full h-full bg-bg-primary">
+<!-- <section class="entire-component relative flex flex-col items-center justify-center gap-6 py-16 px-24 w-full h-full bg-bg-primary">
   <span [ngClass]="{'glowing-effect': textAnimationComplete === true }" class="main-txt text-9xl font-extrabold tracking-tight text-center M-Regular text-accent"></span>
 
   <div class="button-holder opacity-0 flex items-center gap-12">
-    <!-- <app-button variant="primary" type="button" label="Local" class="flex-shrink-0"></app-button>
-    <app-button variant="primary" type="button" label="Multiplayer" class="flex-shrink-0"></app-button> -->
-
-    <span class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Local</span>
+    <span routerLink="game" class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Local</span>
     <span (click)="toggleMultiplayerDialog()" class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Multiplayer</span>
   </div>
 
+</section> -->
 
-  <div class="absolute bottom-8 flex items-center justify-between w-full px-16">
-    <div class="left text-accent G-Medium text-sm tracking-tight">Made by Daniel Glover w/ love ❤️</div>
 
-    <!-- <div class="middle theme-selector text-text-primary G-Medium tracking-tight">🎨  {{selectedTheme.name}}</div> -->
+<div class="absolute bottom-8 flex items-center justify-between w-full px-16">
+  <div class="left text-accent G-Medium text-sm tracking-tight">Made by Daniel Glover w/ love ❤️</div>
 
-    <div class="theme-selector flex gap-4">
-      @for (item of themeService.availableThemes; track $index) {
-        <div 
-          (click)="changeTheme(item.className)" 
-          class="theme cursor-pointer G-Regular text-sm tracking-tight"
-          [ngClass]="{'text-text-primary': item.className !== selectedTheme.className, 'text-accent G-Bold': item.className === selectedTheme.className}">
-          {{item.name}}
-        </div>
-          }
-  
-    </div>
+  <!-- <div class="middle theme-selector text-text-primary G-Medium tracking-tight">🎨  {{selectedTheme.name}}</div> -->
+
+  <div class="theme-selector flex gap-4">
+    @for (item of themeService.availableThemes; track $index) {
+      <div 
+        (click)="changeTheme(item.className)" 
+        class="theme cursor-pointer G-Regular text-sm tracking-tight"
+        [ngClass]="{'text-text-primary': item.className !== selectedTheme.className, 'text-accent G-Bold': item.className === selectedTheme.className}">
+        {{item.name}}
+      </div>
+        }
+
   </div>
-</section>
-
-
-@if(isMultiplayerMode){
-  <div
-      class="entire-dialog flex items-end lg:items-center justify-center w-full h-[100dvh] fixed top-0 z-[100000] left-0 theme-{{selectedTheme}}">
-      <div (click)="toggleMultiplayerDialog()" class="layer absolute top-0 left-0 w-full h-full bg-[#10182836] overflow-hidden"></div>
-  
-      
-        <div class="email-dialog-container w-full lg:w-[35rem] bg-bg-primary border border-accent flex p-6 flex-col lg:rounded-lg relative z-[1000]">
-
-          @if (multiplayerStatus === '') {
-            <div class="left flex flex-col items-center gap-2 gap-y-4">
-              <span class="G-Medium tracking-tight text-center text-lg text-accent">What do you wish to do in multiplayer mode?</span>
-  
-              <div class="flex w-full items-center justify-center gap-4">
-                <span (click)="toggleMultiplayerStatus('join-game')" class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Join a Lobby</span>
-                <span (click)="toggleMultiplayerStatus('create-game')" class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Create a Lobby</span>
-
-                <!-- <app-button (click)="toggleMultiplayerStatus('join-game')" variant="primary" type="button" label="Join A Lobby" class="flex-shrink-0"></app-button>
-                <app-button (click)="toggleMultiplayerStatus('create-game')" variant="primary" type="button" label="Create A Lobby" class="flex-shrink-0"></app-button> -->
-              </div>
-  
-            </div>
-          }
-
-
-          @if (multiplayerStatus === 'join-game') {
-
-            @if (!currentLobby) {
-              <div class="left flex flex-col items-start gap-4">
-                <app-input-regular (keydown.enter)="createLobby(); $event.preventDefault()" class="w-full" [(ngModel)]="playerName" label="Enter your name" type="text"></app-input-regular>
-                <app-input-regular (keydown.enter)="createLobby(); $event.preventDefault()" class="w-full" [(ngModel)]="lobbyCodeForJoining" label="Enter lobby code" type="text"></app-input-regular>
-  
-                <!-- <app-button (click)="joinLobby()" variant="primary" type="button" label="Add" class="flex-shrink-0"></app-button> -->
-
-                <span (click)="joinLobby()" class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Join</span>
-
-              </div>
-            }@else {
-              <div class="flex items-center flex-col gap-1">
-                <span class="G-Regular text-accent">You have joined {{currentLobby.players[0].name}} Lobby</span>
-                <div class="flex items-center gap-3">
-                  <div class="dot w-2 h-2 rounded-full bg-accent animate-pulse"></div>
-                  <span class="G-Regular text-sm text-text-primary">Waiting for host to start the game...</span>
-                </div>
-              </div>
-            }
-
-          }@else {
-            @if (!currentLobby && multiplayerStatus === 'create-game') {
-              <div class="left flex flex-col items-start gap-4">
-                <app-input-regular (keydown.enter)="createLobby(); $event.preventDefault()" class="w-full" [(ngModel)]="playerName" label="Enter your name" type="text"></app-input-regular>
-                <!-- <app-button (click)="createLobby()" variant="primary" type="button" label="Add" class="flex-shrink-0"></app-button> -->
-                <span (click)="createLobby()" class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Create</span>
-
-              </div>
-          }@else if (currentLobby && currentLobby.code && multiplayerStatus === 'create-game') {
-              <div class="left flex flex-col items-center gap-1">
-                <span class="G-Regular tracking-tight text-sm text-text-primary">Lobby Code</span>
-                <span class="G-SemiBold text-4xl tracking-tight text-accent">{{ currentLobby.code }}</span>
-                <span class="G-Regular text-sm text-text-primary">Share this code with your friends to join the game!</span>
-              </div>
-    
-              <div class="middle pt-6">
-                <!-- LIST OF JOINED PLAYERS -->
-                <span class="G-Regular text-sm text-accent">Currently in lobby</span>
-                <div class="joined-players flex flex-col gap-1 mt-2">
-                  @for (player of currentLobby.players; track $index) {
-                    <div class="flex items-center gap-3">
-                      <div class="dot w-2 h-2 rounded-full bg-green-300 animate-pulse"></div>
-                      <span class="G-SemiBold text-accent">{{player.name}}</span>
-                    </div>
-                  }
-                 </div>
-    
-              </div>
-    
-              <div class="right flex items-center justify-end w-full mt-4">
-                <app-button variant="primary" type="button" label="Start Game" class="flex-shrink-0"></app-button>
-              </div>
-          }
-
-          }
-
-        </div>
-
-      
-  
-  </div>
-  }
+</div>
 
 <app-toast id="toast" [selectedTheme]="selectedTheme.className" class="flex items-center justify-center lg:justify-end" [header]="toastHeader" [message]="toastMessage"></app-toast>

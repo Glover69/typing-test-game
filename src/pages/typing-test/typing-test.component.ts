@@ -2,12 +2,14 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { CharacterStatus, TypingSessionData, LobbyData, Toast, EachSecond } from '../../models/data.models';
+import { CharacterStatus, TypingSessionData, LobbyData, Toast, EachSecond, AppTheme } from '../../models/data.models';
 import { LobbyService } from '../../services/lobby.service';
 import { TextProviderService } from '../../services/text-provider.service';
 import { ToastService } from '../../services/toast.service';
-import { ButtonComponent } from '../button.component';
-import { InputRegularComponent } from '../inputs/input-regular.component';
+import { ButtonComponent } from '../../components/button.component';
+import { InputRegularComponent } from '../../components/inputs/input-regular.component';
+import gsap from 'gsap';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-typing-test',
@@ -19,9 +21,9 @@ export class TypingTestComponent implements AfterViewInit{
   @ViewChild('inputRef') inputElement!: ElementRef<HTMLInputElement>; // Get reference to input
 
   title = 'typing-test-game';
-  themes = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'];
+  // themes = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'];
   time = [15, 30, 60, 120]
-  selectedTheme = this.themes[0];
+  // selectedTheme = this.themes[0];
   allWords: CharacterStatus[] = [];
   oneWord: CharacterStatus[][] = [];
   typingSession: TypingSessionData = {
@@ -66,6 +68,8 @@ export class TypingTestComponent implements AfterViewInit{
   previousAbsoluteCursorTop: number | null = null; // Stores the absolute top position from the PREVIOUS calculation
 
 
+  selectedTheme!: AppTheme; // This will hold the theme class name
+  private themeSubscription!: Subscription;
   private subscriptions: Subscription = new Subscription();
 
 
@@ -73,61 +77,84 @@ export class TypingTestComponent implements AfterViewInit{
   currentCharIndex = 0; // Tracks position within the *displayed* word for status updates
   isWordFinished = false; // Flag to check if current word typing is done
 
-  constructor(private textProvider: TextProviderService, private toastService: ToastService, private lobbyService: LobbyService) {}
+  constructor(private textProvider: TextProviderService, private themeService: ThemeService, private toastService: ToastService, private lobbyService: LobbyService) {}
 
-  onThemeChange(theme: string) {
-    this.selectedTheme = theme;
-    this.inputElement?.nativeElement.focus(); // Keep focus on input after theme change
-  }
 
   ngOnInit(): void {
     this.generateWords();
 
-    this.subscriptions.add(
-      this.lobbyService.onLobbyCreated().subscribe(
-        (lobby) => {
-        console.log('Component: Lobby created with code:', lobby.code);
-        this.currentLobby = lobby;
-        this.toastService.showToast('Lobby Created', `Your lobby code was created successfully!`);
-        }
-    ));
+    // Subscribe to theme changes
+    this.themeSubscription = this.themeService.currentThemeClassName$.subscribe(themeClass => {
+      this.selectedTheme = themeClass;
+      console.log('Current theme class in AppComponent:', this.selectedTheme);
+    });
 
-    this.subscriptions.add(
-      this.lobbyService.onJoinedLobby().subscribe(
-        (lobbyData) => {
-          console.log('Component: Successfully joined lobby:', lobbyData);
-          this.currentLobby = lobbyData;
-          this.toastService.showToast('Lobby Joined', `You joined lobby ${this.currentLobby.code} succesfully!`);
-        }
-      )
-    );
+    // this.subscriptions.add(
+    //   this.lobbyService.onLobbyCreated().subscribe(
+    //     (lobby) => {
+    //     console.log('Component: Lobby created with code:', lobby.code);
+    //     this.currentLobby = lobby;
+    //     this.toastService.showToast('Lobby Created', `Your lobby code was created successfully!`);
+    //     }
+    // ));
 
-    this.subscriptions.add(
-      this.lobbyService.onPlayerJoined().subscribe(
-        (playerJoinInfo) => {
-          console.log('Component: A new player joined:', playerJoinInfo);
-          this.toastService.showToast('New Player!', `${playerJoinInfo.playerName} has joined the lobby!`);
+    // this.subscriptions.add(
+    //   this.lobbyService.onJoinedLobby().subscribe(
+    //     (lobbyData) => {
+    //       console.log('Component: Successfully joined lobby:', lobbyData);
+    //       this.currentLobby = lobbyData;
+    //       this.toastService.showToast('Lobby Joined', `You joined lobby ${this.currentLobby.code} succesfully!`);
+    //     }
+    //   )
+    // );
 
-          if (this.currentLobby) {
-            // Update the player list in the current lobby
-            this.currentLobby.players = playerJoinInfo.players;
-          }
-          // Update UI
-        }
-      )
-    );
+    // this.subscriptions.add(
+    //   this.lobbyService.onPlayerJoined().subscribe(
+    //     (playerJoinInfo) => {
+    //       console.log('Component: A new player joined:', playerJoinInfo);
+    //       this.toastService.showToast('New Player!', `${playerJoinInfo.playerName} has joined the lobby!`);
 
-    this.subscriptions.add(
-      this.lobbyService.onLobbyError().subscribe(
-        (errorMsg) => {
-          // this.errorMessage = errorMsg;
-          console.error('Component: Lobby error:', errorMsg);
-          // Display error to user
-        }
-      )
-    );
+    //       if (this.currentLobby) {
+    //         // Update the player list in the current lobby
+    //         this.currentLobby.players = playerJoinInfo.players;
+    //       }
+    //       // Update UI
+    //     }
+    //   )
+    // );
+
+    // this.subscriptions.add(
+    //   this.lobbyService.onLobbyError().subscribe(
+    //     (errorMsg) => {
+    //       // this.errorMessage = errorMsg;
+    //       console.error('Component: Lobby error:', errorMsg);
+    //       // Display error to user
+    //     }
+    //   )
+    // );
   }
 
+
+  animateThis(){
+    const element = document.querySelectorAll('.animate-this')
+
+    gsap.fromTo(element, {
+      opacity: 0,
+      y: 70
+    }, {
+      opacity: 1,
+      y: 0,
+      ease: 'power3.out',
+      duration: 1,
+      delay: 0.5,
+      onComplete: () => {
+        console.log('Animation complete');
+        console.log(this.showResults)
+        // You can perform any additional actions here after the animation completes
+      }
+    });
+
+  }
 
   ngAfterViewInit(): void {
     this.inputElement?.nativeElement.focus();
@@ -136,6 +163,8 @@ export class TypingTestComponent implements AfterViewInit{
       console.log('Position: ' ,this.verticalScrollPosition)
 
     }, 0)
+
+    this.animateThis()
 
     // console.log('Position: ' ,this.verticalScrollPosition)
 
@@ -190,8 +219,9 @@ changeTime(time: any){
 }
 
 restartGame(){
+  this.animateThis()
   this.oneWord.splice(0, 99)
-  this.generateWords()
+  this.generateWords();
 }
 
 resetTimer(){
@@ -363,7 +393,7 @@ startTimer(){
     }
 
     // Ensure input stays focused
-    // this.inputElement?.nativeElement.focus();
+    this.inputElement?.nativeElement.focus();
   }
 
   generateWords() {

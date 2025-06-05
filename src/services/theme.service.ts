@@ -17,7 +17,9 @@ export class ThemeService {
     { name: 'Crimson Night', className: 'theme-second' },
     { name: 'Desert Mirage', className: 'theme-third' },
     { name: 'Synthwave Rider', className: 'theme-fourth' },
-    { name: 'Sakura Sunset', className: 'theme-fifth' }
+    { name: 'Sakura Sunset', className: 'theme-fifth' },
+    { name: 'Blueberry Dark', className: 'theme-sixth' },
+    { name: 'Blueberry Light', className: 'theme-seventh' },
   ];
 
   private currentThemeClassName = new BehaviorSubject<AppTheme>(this.availableThemes[0]);

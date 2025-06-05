@@ -1,25 +1,24 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, HostListener, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
-import { ButtonComponent } from '../components/button.component';
-import { ToastService } from '../services/toast.service';
-import { ToastComponent } from '../components/toast/toast.component';
-import { RouterModule, RouterOutlet } from '@angular/router';
-import { AppTheme, LobbyData, Toast } from '../models/data.models';
-import gsap from 'gsap';
-import { Subscription } from 'rxjs';
-import { ThemeService } from '../services/theme.service';
-import { InputRegularComponent } from '../components/inputs/input-regular.component';
-import { LobbyService } from '../services/lobby.service';
+import { AfterViewInit, Component, OnDestroy, Renderer2 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule, RouterOutlet } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ButtonComponent } from '../../components/button.component';
+import { InputRegularComponent } from '../../components/inputs/input-regular.component';
+import { AppTheme, LobbyData, Toast } from '../../models/data.models';
+import { LobbyService } from '../../services/lobby.service';
+import { ThemeService } from '../../services/theme.service';
+import { ToastService } from '../../services/toast.service';
+import gsap from 'gsap';
 
 @Component({
-  selector: 'app-root',
+  selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, ToastComponent, FormsModule, RouterOutlet, ButtonComponent, InputRegularComponent],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  imports: [CommonModule, RouterModule, FormsModule, ButtonComponent, InputRegularComponent],
+  templateUrl: './home.component.html',
+  styleUrl: './home.component.css',
 })
-export class AppComponent implements AfterViewInit, OnDestroy {
+export class HomeComponent implements AfterViewInit, OnDestroy {
   toastMessage: string = '';
   toastHeader: string = '';
   selectedTheme!: AppTheme; // This will hold the theme class name
@@ -34,16 +33,18 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   textAnimationComplete: boolean = false;
 
+  private mainTimeline: gsap.core.Timeline | null = null;
+  private meteorElements: HTMLElement[] = [];
+  private meteorTweens: gsap.core.Tween[] = [];
 
-  constructor(private toastService: ToastService, public themeService: ThemeService, private lobbyService: LobbyService) {}
+
+  constructor(private toastService: ToastService, private router: Router, private renderer: Renderer2, public themeService: ThemeService, private lobbyService: LobbyService) {}
 
 
   ngOnInit(): void{
-
     this.webSocketConnections();
 
     // Subscribe to theme changes
-
     this.themeSubscription = this.themeService.currentThemeClassName$.subscribe(themeClass => {
       this.selectedTheme = themeClass;
       console.log('Current theme class in AppComponent:', this.selectedTheme);
@@ -70,7 +71,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     const buttonHolder = document.querySelector('.button-holder');
     const animationContainer = document.querySelector('.entire-component') as HTMLElement; // Your main section
 
+    this.mainTimeline = gsap.timeline();
 
+    
     if (textElement) {
       const originalText = 'SpeedType';
       console.log(originalText)
@@ -82,80 +85,99 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         charSpan.textContent = char;
         charSpan.style.display = 'inline-block'; // Necessary for individual transforms if needed
         charSpan.style.opacity = '0'; // Start hidden
-        textElement.appendChild(charSpan);
+        this.renderer.appendChild(textElement, charSpan); // Use Renderer2
       });
 
       // Animate characters one by one
-      gsap.to(textElement.children, {
+      this.mainTimeline.to(textElement.children, {
         opacity: 1,
-        y: 0, // Optional: if you want them to slide in from a y-offset
-        stagger: 0.07, // Time between each character animation
-        duration: 0.5, // Duration of each character's animation
+        y: 0,
+        stagger: 0.07,
+        duration: 0.5,
         ease: 'power3.out',
-        delay: 1, // Initial delay before the animation starts
-        afterComplete: () => {
-          // After all characters are animated, you can do something here if needed
+        onComplete: () => {
           console.log('Text animation completed');
-          // this.textAnimationComplete = true; // Set flag to true when animation is complete
+          // this.textAnimationComplete = true;
         }
-      });
+      }, 1); // Start at 1 second mark in the timeline
     }
 
-    gsap.fromTo(buttonHolder, {
-      y: 50,
-      opacity: 0
-    }, {
-      y: 0,
-      opacity: 1,
-      ease: 'power4',
-      duration: 1.5,
-      delay: 2 // Delay to sync with text animation
-    });
+    if (buttonHolder) {
+      this.mainTimeline.fromTo(buttonHolder,
+        { y: 50, opacity: 0 },
+        { y: 0, opacity: 1, ease: 'power4', duration: 1, delay: 0.5 } // Relative delay
+      , ">-0.2"); // Start slightly overlapping with text animation end
+    }
 
     // Create and animate meteors
     if (animationContainer) {
       const numMeteors = 150; // Adjust number of meteors
       const containerWidth = animationContainer.offsetWidth;
       const containerHeight = animationContainer.offsetHeight;
+      this.meteorElements = []; // Clear previous meteors if any
+      this.meteorTweens = [];
 
       console.log('Container dimensions:', containerWidth, containerHeight);
 
       for (let i = 0; i < numMeteors; i++) {
-        const meteor = document.createElement('div');
-        meteor.style.position = 'absolute';
-        meteor.style.width = `${Math.random() * 3 + 1}px`; // Random width (1px to 4px)
-        meteor.style.height = `32px`; // Square meteors
-        meteor.style.backgroundColor = 'var(--color-accent)'; // Use theme accent or fallback
-        meteor.style.borderRadius = '50%';
-        meteor.style.transformOrigin = 'center center'; // Ensure rotation is around the center
-        meteor.style.rotate = `${Math.random() * 360}deg`; // Random rotation
-        meteor.style.opacity = '0'; // Start invisible
-        animationContainer.appendChild(meteor);
+        const meteor = this.renderer.createElement('div');
+        this.renderer.setStyle(meteor, 'position', 'absolute');
+        this.renderer.setStyle(meteor, 'width', `${Math.random() * 3 + 1}px`);
+        this.renderer.setStyle(meteor, 'height', `32px`);
+        this.renderer.setStyle(meteor, 'backgroundColor', 'var(--color-accent, white)');
+        this.renderer.setStyle(meteor, 'borderRadius', '50%');
+        this.renderer.setStyle(meteor, 'opacity', '0');
+        this.renderer.setStyle(meteor, 'transformOrigin', 'center center');
+        this.renderer.setStyle(meteor, 'rotate', `${Math.random() * 360}deg`);
+        this.renderer.appendChild(animationContainer, meteor);
+        this.meteorElements.push(meteor);
 
         // Function to set random animation properties
-        const animateMeteor = () => {
-          // Random start (edges) and end positions
+        const animateMeteor = (m: HTMLElement) => {
           const startX = Math.random() * containerWidth;
-          const startY = Math.random() < 0.5 ? -20 : containerHeight + 20; // Start from top or bottom edge
+          const startY = Math.random() < 0.5 ? -42 : containerHeight + 10;
           const endX = Math.random() * containerWidth;
-          const endY = startY > 0 ? -20 : containerHeight + 20; // End at opposite edge
+          const endY = startY < 0 ? containerHeight + 10 : -42;
 
-          gsap.fromTo(meteor,
+          const tween = gsap.fromTo(m,
             { x: startX, y: startY, opacity: 0, scale: Math.random() * 0.4 + 0.6 },
             {
-              x: endX,
-              y: endY,
-              opacity: Math.random() * 0.3 + 0.7, // Random opacity (0.3 to 0.8)
-              scale: Math.random() * 0.3 + 0.8,
-              duration: Math.random() * 5 + 4, // Random duration (3s to 8s)
-              delay: Math.random() * 6, // Random initial delay
-              ease: 'linear',
-              onComplete: animateMeteor, // Loop the animation by calling itself
+              x: endX, y: endY, opacity: Math.random() * 0.3 + 0.7, scale: Math.random() * 0.3 + 0.8,
+              duration: Math.random() * 5 + 4, delay: Math.random() * 6, ease: 'none',
+              onComplete: () => animateMeteor(m) // Pass meteor to loop
             }
           );
+          this.meteorTweens.push(tween);
         };
-        animateMeteor(); // Start the animation for this meteor
+        animateMeteor(meteor); // Start the animation for this meteor
       }
+    }
+  }
+
+  navigateToGame(): void {
+    if (this.mainTimeline) {
+      // 1. Handle Meteors: Fade out and stop animations
+      this.meteorTweens.forEach(tween => tween.kill()); // Stop future animations
+      gsap.to(this.meteorElements, {
+        opacity: 0,
+        duration: 0.5,
+        onComplete: () => {
+          this.meteorElements.forEach(m => m.remove()); // Remove from DOM
+          this.meteorElements = [];
+          this.meteorTweens = [];
+        }
+      });
+
+      // 2. Reverse the main timeline (text and buttons)
+      this.mainTimeline.eventCallback("onReverseComplete", () => {
+        console.log("Main timeline reverse complete. Navigating...");
+        this.router.navigate(['/game']);
+        this.mainTimeline?.eventCallback("onReverseComplete", null); // Clean up callback
+      });
+      this.mainTimeline.reverse();
+    } else {
+      // Fallback if timeline wasn't created
+      this.router.navigate(['/game']);
     }
   }
 

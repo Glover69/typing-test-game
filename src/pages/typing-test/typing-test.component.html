@@ -1,8 +1,8 @@
 
-<section class="entire-component flex flex-col justify-around gap-4 py-16 px-24 w-full h-full bg-bg-primary theme-{{selectedTheme}}">
+<section class="entire-component flex flex-col justify-center gap-12 py-16 px-24 w-full h-full bg-bg-primary theme-{{selectedTheme}}">
 
     @if (!isTimerActive) {
-      <div class="top flex flex-col gap-4">
+      <div class="animate-this opacity-0 top flex flex-col gap-4">
         <span class="G-Light text-xl text-text-primary tracking-tight">Hello There</span>
     
         <span class="G-Medium text-5xl text-accent tracking-tight">Hello There</span>
@@ -24,15 +24,12 @@
         </div>
   
         @if (this.showResults) {
-          <button (click)="restartGame()" class="w-fit px-4 py-2 rounded-lg flex items-center justify-center G-SemiBold tracking-tight text-text-primary cursor-pointer ">Reset Game</button>
+          <span (click)="restartGame()" class="options relative py-2 rounded-lg flex items-center justify-center G-SemiBold tracking-tight text-text-primary cursor-pointer ">Reset Game</span>
         }
       </div>
-  
-  
-  
-      <!-- <span class="text-3xl">Results: </span> -->
+
     }@else {
-      <div class="middle flex flex-col items-center gap-4 w-full">
+      <div class="animate-this opacity-0 flex flex-col items-center gap-4 w-full">
   
         <div class="time-list flex items-center gap-3">
           @for (item of time; track $index) {
@@ -72,7 +69,7 @@
   
     @if (!isTimerActive) {
   
-      <div class="flex w-full items-center justify-between">
+      <!-- <div class="flex w-full items-center justify-between">
         <div class="theme-selector flex gap-4">
           @for (item of themes; track $index) {
             <div 
@@ -87,7 +84,7 @@
     
     
         <span class="text-text-primary hover:text-accent cursor-pointer" (click)="toggleMultiplayerDialog()">Multiplayer Mode!</span> 
-      </div>
+      </div> -->
   
     }
     

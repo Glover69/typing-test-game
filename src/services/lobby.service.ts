@@ -7,7 +7,7 @@ import { LobbyJoinData, LobbyData, PlayerJoinedData } from '../models/data.model
 export class LobbyService {
   constructor(private socket: Socket) {
 
-    this.socket = io('http://localhost:2005/typing-test', {
+    this.socket = io('https://light-frank-crayfish.ngrok-free.app/typing-test', {
       path: "/socket",
       transports: ['websocket', 'polling'] // Good practice to specify transports
     });
