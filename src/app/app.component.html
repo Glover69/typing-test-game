@@ -12,10 +12,9 @@
 </section> -->
 
 
-<div class="absolute bottom-8 flex items-center justify-between w-full px-16">
+<div class="absolute animate-this opacity-0 bottom-8 flex items-center justify-between w-full px-16">
   <div class="left text-accent G-Medium text-sm tracking-tight">Made by Daniel Glover w/ love ❤️</div>
 
-  <!-- <div class="middle theme-selector text-text-primary G-Medium tracking-tight">🎨  {{selectedTheme.name}}</div> -->
 
   <div class="theme-selector flex gap-4">
     @for (item of themeService.availableThemes; track $index) {
