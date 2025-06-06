@@ -31,11 +31,14 @@
     }@else {
       <div class="animate-this opacity-0 flex flex-col items-center gap-4 w-full">
   
-        <div class="time-list flex items-center gap-3">
-          @for (item of time; track $index) {
-            <button (click)="changeTime(item)" [ngClass]="{'text-accent G-SemiBold': item === timeLeft, 'text-text-primary': item !== timeLeft}" class="single-time cursor-pointer">{{item}}</button>
-          }
-        </div>
+        @if (!isTimerActive) {
+          <div class="time-list flex items-center gap-3">
+            @for (item of time; track $index) {
+              <button (click)="changeTime(item)" [ngClass]="{'text-accent G-SemiBold': item === timeLeft, 'text-text-primary': item !== timeLeft}" class="single-time cursor-pointer">{{item}}</button>
+            }
+          </div>
+        }
+
         <span class="timer-container text-5xl G-SemiBold text-accent">{{timeLeft}}</span>
     
     
@@ -90,86 +93,5 @@
     
   </section>
   
-  
-  @if(isMultiplayerMode){
-    <div
-        class="entire-dialog flex items-end lg:items-center justify-center w-full h-[100dvh] fixed top-0 z-[100000] left-0 theme-{{selectedTheme}}">
-        <div class="layer absolute top-0 left-0 w-full h-full bg-[#10182836] overflow-hidden"></div>
-    
-        
-          <div class="email-dialog-container w-full lg:w-[35rem] bg-bg-primary border border-accent flex p-6 flex-col lg:rounded-lg relative z-[1000]">
-  
-            @if (multiplayerStatus === '') {
-              <div class="left flex flex-col items-center gap-2 gap-y-4">
-                <span class="G-Medium tracking-tight text-center text-lg text-accent">What do you wish to do in multiplayer mode?</span>
-    
-                <div class="flex w-full items-center justify-center gap-4">
-                  <app-button (click)="toggleMultiplayerStatus('join-game')" variant="primary" type="button" label="Join A Lobby" class="flex-shrink-0"></app-button>
-                  <app-button (click)="toggleMultiplayerStatus('create-game')" variant="primary" type="button" label="Create A Lobby" class="flex-shrink-0"></app-button>
-                </div>
-    
-              </div>
-            }
-  
-  
-            @if (multiplayerStatus === 'join-game') {
-  
-              @if (!currentLobby) {
-                <div class="left flex flex-col items-start gap-2">
-                  <app-input-regular (keydown.enter)="createLobby(); $event.preventDefault()" class="w-full" [(ngModel)]="playerName" label="Enter your name" type="text"></app-input-regular>
-                  <app-input-regular (keydown.enter)="createLobby(); $event.preventDefault()" class="w-full" [(ngModel)]="lobbyCodeForJoining" label="Enter lobby code" type="text"></app-input-regular>
-    
-                  <app-button (click)="joinLobby()" variant="primary" type="button" label="Add" class="flex-shrink-0"></app-button>
-                </div>
-              }@else {
-                <div class="flex items-center flex-col gap-1">
-                  <span class="G-Regular text-accent">You have joined {{currentLobby.players[0].name}} Lobby</span>
-                  <div class="flex items-center gap-3">
-                    <div class="dot w-2 h-2 rounded-full bg-accent animate-pulse"></div>
-                    <span class="G-Regular text-sm text-text-primary">Waiting for host to start the game...</span>
-                  </div>
-                </div>
-              }
-  
-            }@else {
-              @if (!currentLobby && multiplayerStatus === 'create-game') {
-                <div class="left flex flex-col items-start gap-2">
-                  <app-input-regular (keydown.enter)="createLobby(); $event.preventDefault()" class="w-full" [(ngModel)]="playerName" label="Enter your name" type="text"></app-input-regular>
-                  <app-button (click)="createLobby()" variant="primary" type="button" label="Add" class="flex-shrink-0"></app-button>
-                </div>
-            }@else if (currentLobby && currentLobby.code && multiplayerStatus === 'create-game') {
-                <div class="left flex flex-col items-center gap-1">
-                  <span class="G-Regular tracking-tight text-sm text-text-primary">Lobby Code</span>
-                  <span class="G-SemiBold text-2xl tracking-tight text-text-primary">{{ currentLobby.code }}</span>
-                  <span class="G-Regular text-sm text-text-primary">Share this code with your friends to join the game!</span>
-                </div>
-      
-                <div class="middle pt-6">
-                  <!-- LIST OF JOINED PLAYERS -->
-                  <span class="G-Regular text-sm text-text-primary">Joined Players</span>
-                  <div class="joined-players flex flex-col gap-1 mt-2">
-                    @for (player of currentLobby.players; track $index) {
-                      <div class="flex items-center gap-3">
-                        <div class="dot w-2 h-2 rounded-full bg-accent animate-pulse"></div>
-                        <span class="G-SemiBold text-text-primary">{{player.name}}</span>
-                      </div>
-                    }
-                   </div>
-      
-                </div>
-      
-                <div class="right flex items-center justify-end w-full mt-4">
-                  <app-button variant="primary" type="button" label="Start Game" class="flex-shrink-0"></app-button>
-                </div>
-            }
-  
-            }
-  
-          </div>
-  
-        
-    
-    </div>
-    }
   
     

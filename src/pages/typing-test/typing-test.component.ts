@@ -86,7 +86,7 @@ export class TypingTestComponent implements AfterViewInit{
     // Subscribe to theme changes
     this.themeSubscription = this.themeService.currentThemeClassName$.subscribe(themeClass => {
       this.selectedTheme = themeClass;
-      console.log('Current theme class in AppComponent:', this.selectedTheme);
+      // console.log('Current theme class in AppComponent:', this.selectedTheme);
     });
 
     // this.subscriptions.add(

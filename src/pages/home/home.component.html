@@ -1,4 +1,4 @@
-<section class="entire-component relative flex flex-col items-center justify-center gap-6 py-16 px-24 w-full h-full bg-bg-primary">
+<section class="entire-component overflow-hidden relative flex flex-col items-center justify-center gap-6 py-16 px-24 w-full h-full bg-bg-primary">
     <span [ngClass]="{'glowing-effect': textAnimationComplete === true }" class="main-txt text-9xl font-extrabold tracking-tight text-center M-Regular text-accent"></span>
   
     <div class="button-holder opacity-0 flex items-center gap-12">  
@@ -7,10 +7,9 @@
     </div>
   
   
-    <div class="absolute bottom-8 flex items-center justify-between w-full px-16">
+    <div class="absolute bottom-16 flex items-center justify-between w-full px-16">
       <div class="left text-accent G-Medium text-sm tracking-tight">Made by Daniel Glover w/ love ❤️</div>
   
-      <!-- <div class="middle theme-selector text-text-primary G-Medium tracking-tight">🎨  {{selectedTheme.name}}</div> -->
   
       <div class="theme-selector flex gap-4">
         @for (item of themeService.availableThemes; track $index) {
@@ -62,7 +61,7 @@
                 </div>
               }@else {
                 <div class="flex items-center flex-col gap-1">
-                  <span class="G-Regular text-accent">You have joined {{currentLobby.players[0].name}} Lobby</span>
+                  <span class="G-Regular text-accent">You have joined {{currentLobby.players[0].name}}'s Lobby</span>
                   <div class="flex items-center gap-3">
                     <div class="dot w-2 h-2 rounded-full bg-accent animate-pulse"></div>
                     <span class="G-Regular text-sm text-text-primary">Waiting for host to start the game...</span>
