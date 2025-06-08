@@ -56,7 +56,7 @@ export class TextProviderService {
     "month", "more", "most", "mother", "mouth", "move", "movie", "Mr", "Mrs",
     "much", "music", "must", "my", "myself", "name", "nation", "nature", "near",
     "nearly", "need", "never", "new", "news", "next", "nice",
-    "night", "no", "none", "nor", "north", "not", "note", "notice", "now", "n't", "number",
+    "night", "no", "none", "nor", "north", "not", "note", "notice", "now", "number",
     "occur", "of", "off", "offer", "office", "often", "oh", "oil", "ok", "old",
     "on", "once", "one", "only", "onto", "open", "option", "or", "order",
     "other", "others", "our", "out", "over", "own", "owner", "page", "pain",
@@ -88,7 +88,7 @@ export class TextProviderService {
     "though", "threat", "three", "throw", "thus", "time",
     "to", "today", "too", "top", "total", "tough", "toward", "town", "trade",
     "travel", "treat", "tree", "trial", "trip", "true",
-    "truth", "try", "turn", "TV", "two", "type", "under", "unit", "until", "up", "upon",
+    "truth", "try", "turn", "two", "type", "under", "unit", "until", "up", "upon",
     "us", "use", "value", "very", "victim", "view", "visit", "voice",
     "vote", "wait", "walk", "wall", "want", "war", "watch", "water", "way", "we", "weapon", "wear", "week",
     "weight", "well", "west", "what", "when", "where", "which", "while",
@@ -96,7 +96,7 @@ export class TextProviderService {
     "wish", "with", "within", "woman", "wonder", "word", "work", "worker", "world", "worry",
     "would", "write", "wrong", "yard", "yeah", "year", "yes", "yet", "you", "young", "your"
     // Add more words as needed
-  ];
+  ].filter(word => word !== word.toUpperCase() || word.toLowerCase() === word.toUpperCase());
 
   constructor() { }
 

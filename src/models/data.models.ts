@@ -22,6 +22,7 @@ export interface Player {
     id: string;
     name: string;
     progress: number;
+    isReady: boolean;
   }
   
   export interface LobbyJoinData {
@@ -31,6 +32,8 @@ export interface Player {
   
   export interface LobbyData {
     code: string;
+    timeLimit: number;
+    wordCount: number;
     players: Player[];
     words: string[];
     isActive: boolean;

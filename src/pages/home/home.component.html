@@ -23,7 +23,7 @@
     
       </div>
     </div>
-  </section>
+</section>
   
   
   @if(isMultiplayerMode){
@@ -66,15 +66,43 @@
                     <div class="dot w-2 h-2 rounded-full bg-accent animate-pulse"></div>
                     <span class="G-Regular text-sm text-text-primary">Waiting for host to start the game...</span>
                   </div>
+
+                  <div class="flex items-center gap-3">
+                    <div [ngClass]="{'bg-green-600' : currentPlayer?.isReady === true, 'bg-red-600' : !currentPlayer?.isReady}" class="dot w-2 h-2 rounded-full animate-pulse"></div>
+                    <span class="G-Regular text-sm text-text-primary">{{ currentPlayer?.isReady ? 'Ready' : 'Not Ready' }}</span>
+                  </div>
+
+
+                  <div class="flex justify-end w-full">
+                    <span (click)="readyUp(true, currentLobby.code, playerName)"
+                    class="options disabled:cursor-not-allowed relative text-text-primary cursor-pointer G-SemiBold text-lg text-center py-1">
+                    Ready Up
+                    </span>
+                  </div>
                 </div>
               }
   
             }@else {
               @if (!currentLobby && multiplayerStatus === 'create-game') {
-                <div class="left flex flex-col items-start gap-4">
-                  <app-input-regular (keydown.enter)="createLobby(); $event.preventDefault()" class="w-full" [(ngModel)]="playerName" label="Enter your name" type="text"></app-input-regular>
+                <div class="left flex flex-col items-start gap-6">
+                  <app-input-regular class="w-full" [(ngModel)]="playerName" label="Enter your name" type="text"></app-input-regular>
+                  <app-input-regular class="w-full" [(ngModel)]="wordCount" label="How many words for this lobby?" type="text"></app-input-regular>
+
+                  <div class="time-input flex flex-col items-start gap-2">
+                    <span class="G-Regular tracking-tight text-accent">How many seconds?</span>
+                    <div class="time-list flex items-center gap-3">
+                      @for (item of time; track $index) {
+                        <button (click)="changeTime(item)" [ngClass]="{'text-accent G-SemiBold': item === timeLimit, 'text-text-primary': item !== timeLimit}" class="single-time cursor-pointer">{{item}}</button>
+                      }
+                    </div>
+                  </div>
+
+
                   <!-- <app-button (click)="createLobby()" variant="primary" type="button" label="Add" class="flex-shrink-0"></app-button> -->
-                  <span (click)="createLobby()" class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Create</span>
+                    <span (click)="createLobby()"
+                    class="options disabled:cursor-not-allowed relative text-text-primary cursor-pointer G-SemiBold text-lg text-center py-1">
+                    Create
+                    </span>
   
                 </div>
             }@else if (currentLobby && currentLobby.code && multiplayerStatus === 'create-game') {
@@ -82,6 +110,13 @@
                   <span class="G-Regular tracking-tight text-sm text-text-primary">Lobby Code</span>
                   <span class="G-SemiBold text-4xl tracking-tight text-accent">{{ currentLobby.code }}</span>
                   <span class="G-Regular text-sm text-text-primary">Share this code with your friends to join the game!</span>
+
+
+                  <div class="flex items-center justify-center gap-12">
+                    <span class="G-Regular tracking-tight text-accent">{{currentLobby.timeLimit}} seconds</span>
+                    <span class="G-Regular tracking-tight text-accent">{{currentLobby.wordCount}} words</span>
+
+                  </div>
                 </div>
       
                 <div class="middle pt-6">
@@ -90,7 +125,7 @@
                   <div class="joined-players flex flex-col gap-1 mt-2">
                     @for (player of currentLobby.players; track $index) {
                       <div class="flex items-center gap-3">
-                        <div class="dot w-2 h-2 rounded-full bg-green-600 animate-pulse"></div>
+                        <div [ngClass]="{ 'bg-green-600': player.isReady, 'bg-accent': !player.isReady }" class="dot w-2 h-2 rounded-full animate-pulse"></div>
                         <span class="G-SemiBold text-accent">{{player.name}}</span>
                       </div>
                     }
@@ -98,8 +133,12 @@
       
                 </div>
       
-                <div class="right flex items-center justify-end w-full mt-4">
-                  <app-button variant="primary" type="button" label="Start Game" class="flex-shrink-0"></app-button>
+                <div class="right flex items-center justify-between w-full mt-4">
+                  <span (click)="readyUp(true, currentLobby.code, playerName)"
+                    class="options disabled:cursor-not-allowed relative text-text-primary cursor-pointer G-SemiBold text-lg text-center py-1">
+                    Ready Up
+                    </span>
+                  <span (click)="startGame(currentLobby.code, currentLobby.timeLimit, currentLobby.wordCount)" class="options relative text-text-primary cursor-pointer G-SemiBold text-lg  text-center py-1">Start Game</span>
                 </div>
             }
   

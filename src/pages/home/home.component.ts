@@ -5,7 +5,7 @@ import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ButtonComponent } from '../../components/button.component';
 import { InputRegularComponent } from '../../components/inputs/input-regular.component';
-import { AppTheme, LobbyData, Toast } from '../../models/data.models';
+import { AppTheme, LobbyData, Player, Toast } from '../../models/data.models';
 import { LobbyService } from '../../services/lobby.service';
 import { ThemeService } from '../../services/theme.service';
 import { ToastService } from '../../services/toast.service';
@@ -19,14 +19,20 @@ import gsap from 'gsap';
   styleUrl: './home.component.css',
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
-  toastMessage: string = '';
-  toastHeader: string = '';
+  isLocalMode: boolean = true; // Default to local mode
   selectedTheme!: AppTheme; // This will hold the theme class name
   private themeSubscription!: Subscription;
   isMultiplayerMode: boolean = false
   lobbyCodeForJoining = ''
+  currentPlayer: Player | null = null;
+  isGameStarted: boolean = false;
   
+  // Inputs for creating lobby
+  wordCount: number = 10; // Default word count
+  timeLimit: number = 0; // Default time limit in seconds
   playerName = '';
+  time = [15, 30, 60, 120]
+
   multiplayerStatus: any = ''
   currentLobby: LobbyData | null = null;
   private subscriptions: Subscription = new Subscription();
@@ -48,16 +54,6 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     this.themeSubscription = this.themeService.currentThemeClassName$.subscribe(themeClass => {
       this.selectedTheme = themeClass;
       console.log('Current theme class in AppComponent:', this.selectedTheme);
-    });
-
-    this.toastService.toast$.subscribe((toast: Toast) => {
-      this.toastMessage = `${toast.message}`;
-      this.toastHeader = `${toast.header}`;
-      // Automatically hide the snackbar after 5 seconds
-      setTimeout(() => {
-        // this.animateOut();
-        (this.toastHeader = ''), (this.toastMessage = '');
-      }, 3500);
     });
   }
 
@@ -199,9 +195,36 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           console.log('Component: Successfully joined lobby:', lobbyData);
           this.currentLobby = lobbyData;
           this.toastService.showToast('Lobby Joined', `You joined lobby ${this.currentLobby.code} succesfully!`);
+          this.currentPlayer = this.currentLobby.players.find(player => player.name === this.playerName) || null;
         }
       )
     );
+    this.subscriptions.add(
+      this.lobbyService.onPlayerReady().subscribe(
+        (lobbyData) => {
+          console.log('Component: Player ready status confirmed:', lobbyData);
+          this.currentLobby = lobbyData;
+          this.currentPlayer = this.currentLobby.players.find(player => player.name === this.playerName) || null;
+          this.toastService.showToast('Ready Status', `${this.currentPlayer?.name} is now ready!`);
+          // Update UI to reflect player ready status
+        }
+      )
+
+    );
+
+    this.subscriptions.add(
+      this.lobbyService.onGameStarted().subscribe(
+        (lobbyData) => {
+          console.log('Component: Game started:', lobbyData);
+          this.currentLobby = lobbyData;
+          this.toastService.showToast('Game Started', `The game has started!`);
+          // Navigate to the game page or update UI accordingly
+          this.isGameStarted = true;
+          this.router.navigate(['/game']);
+        }
+      )
+    );
+
 
     this.subscriptions.add(
       this.lobbyService.onPlayerJoined().subscribe(
@@ -223,6 +246,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         (errorMsg) => {
           // this.errorMessage = errorMsg;
           console.error('Component: Lobby error:', errorMsg);
+          this.toastService.showToast('Lobby Error', errorMsg);
           // Display error to user
         }
       )
@@ -242,11 +266,21 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
 
 
   createLobby() {
-    if (this.playerName.trim()) {
-      this.lobbyService.createLobby(this.playerName.trim());
-    } else {
-      console.log("Please enter a player name.");
+    console.log('Burger')
+    if(this.playerName === '' || !this.wordCount || !this.timeLimit){
+      this.toastService.showToast('Error', 'Please fill in all fields before creating a lobby.');
     }
+
+    const data = {
+      playerName: this.playerName.trim(),
+      wordCount: this.wordCount,
+      timeLimit: this.timeLimit
+    }
+
+
+    console.log('Creating lobby with data: ', data);
+    // Call the lobby service to create a lobby
+    this.lobbyService.createLobby(data)
   }
 
   joinLobby(){
@@ -261,7 +295,31 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
     }else{
       console.log("misssing player name or lobby code");
     }
+  }
 
+  changeTime(time: number){
+    this.timeLimit = time
+  }
+
+  startGame(code: string, timeLimit: number, wordCount: number ): void {
+    const data = {
+      code: code,
+      timeLimit: timeLimit,
+      wordCount: wordCount
+    }
+    console.log('Starting game with data: ', data);
+    this.lobbyService.startGame(data)
+  }
+
+  readyUp(isReady: boolean, code: string, playerName: string): void {
+    const data = {
+      code: code,
+      playerName: playerName,
+      isReady: isReady
+    }
+
+    console.log(data, this.currentLobby)
+    this.lobbyService.readyUp(data)
   }
 
   ngOnDestroy(): void {

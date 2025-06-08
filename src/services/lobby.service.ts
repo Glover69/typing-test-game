@@ -41,8 +41,8 @@ export class LobbyService {
 
   // --- Emitters --- //
 
-  createLobby(playerName: string): void {
-    console.log('[Angular SocketService] createLobby method called. PlayerName:', playerName); // Log 1
+  createLobby(data: { playerName: string, timeLimit: number, wordCount: number }): void {
+    console.log('[Angular SocketService] createLobby method called. PlayerName:', data.playerName); // Log 1
     if (!this.socket) {
       console.error('[Angular SocketService] Socket object is NOT INITIALIZED!');
       return;
@@ -54,7 +54,7 @@ export class LobbyService {
       return;
     }
     console.log('[Angular SocketService] Socket IS connected. Emitting "createLobby" to /typing-test namespace...'); // Log 3
-    this.socket.emit('createLobby', playerName);
+    this.socket.emit('createLobby', data);
   }
 
   // --- Listeners (returning Observables) ---
@@ -111,6 +111,30 @@ export class LobbyService {
     });
   }
 
+  // This event is for the player who is readying up
+  onPlayerReady(): Observable<LobbyData> {
+    return new Observable<LobbyData>((observer) => {
+      this.socket.on('selfReadyStatusConfirmed', (data: LobbyData) => {
+        console.log('[Angular SocketService] Received "selfReadyStatusConfirmed" event with data:', data);
+        observer.next(data);
+      });
+      // Cleanup when observable is unsubscribed
+      return () => this.socket.off('selfReadyStatusConfirmed');
+    });
+  }
+
+  // This event is for when thr game has been started
+  onGameStarted(): Observable<LobbyData> {
+    return new Observable<LobbyData>((observer) => {
+      this.socket.on('gameStarted', (data: LobbyData) => {
+        console.log('[Angular SocketService] Received "gameStarted" event with data:', data);
+        observer.next(data);
+      });
+      // Cleanup when observable is unsubscribed
+      return () => this.socket.off('gameStarted');
+    });
+  }
+
   // This event is for everyone in the lobby when a new player joins
   onPlayerJoined(): Observable<PlayerJoinedData> {
     return new Observable<PlayerJoinedData>((observer) => {
@@ -121,6 +145,25 @@ export class LobbyService {
       // Cleanup when observable is unsubscribed
       return () => this.socket.off('playerJoined');
     });
+  }
+
+  readyUp(data: { code: string, playerName: string, isReady: boolean }): void {
+    console.log(data)
+    if (!this.socket.connected) {
+      console.error('SocketService: Socket not connected. Cannot start game.');
+      return;
+    }
+    console.log(`[Angular SocketService] Emitting "readyUp" for lobby: ${data.code}`);
+    this.socket.emit('readyUp', data);
+  }
+
+  startGame(data: { code: string, timeLimit: number, wordCount: number} ): void {
+    if (!this.socket.connected) {
+      console.error('SocketService: Socket not connected. Cannot start game.');
+      return;
+    }
+    console.log(`[Angular SocketService] Emitting "startGame" for lobby: ${data}`);
+    this.socket.emit('startGame', data);
   }
 
 }

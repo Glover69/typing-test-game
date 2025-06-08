@@ -653,28 +653,28 @@ startTimer(){
   }
 
 
-  createLobby() {
-    if (this.playerName.trim()) {
-      this.lobbyService.createLobby(this.playerName.trim());
-    } else {
-      console.log("Please enter a player name.");
-    }
-  }
+  // createLobby() {
+  //   if (this.playerName.trim()) {
+  //     this.lobbyService.createLobby(this.playerName.trim());
+  //   } else {
+  //     console.log("Please enter a player name.");
+  //   }
+  // }
 
-  joinLobby(){
-    const data = {
-      code: this.lobbyCodeForJoining.trim(),
-      playerName: this.playerName.trim()
-    }
+  // joinLobby(){
+  //   const data = {
+  //     code: this.lobbyCodeForJoining.trim(),
+  //     playerName: this.playerName.trim()
+  //   }
 
-    if(data.playerName && data.code){
-      console.log('Joining lobby with data: ', data);
-      this.lobbyService.joinLobby(data);
-    }else{
-      console.log("misssing player name or lobby code");
-    }
+  //   if(data.playerName && data.code){
+  //     console.log('Joining lobby with data: ', data);
+  //     this.lobbyService.joinLobby(data);
+  //   }else{
+  //     console.log("misssing player name or lobby code");
+  //   }
 
-  }
+  // }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe(); // Unsubscribe from all subscriptions
