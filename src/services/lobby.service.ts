@@ -17,23 +17,23 @@ export class LobbyService {
 
 
   private setupConnectionHandlers(): void {
-    console.log('SocketService: Constructor called. Attempting to connect...');
+    // console.log('SocketService: Constructor called. Attempting to connect...');
 
     this.socket.on('connect', () => {
-      console.log('Socket.IO: Connected to /typing-test namespace with ID:', this.socket.id);
+      // console.log('Socket.IO: Connected to /typing-test namespace with ID:', this.socket.id);
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('Socket.IO: Disconnected from /typing-test namespace:', reason);
+      // console.log('Socket.IO: Disconnected from /typing-test namespace:', reason);
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Socket.IO: Connection to /typing-test namespace error:', error);
+      // console.error('Socket.IO: Connection to /typing-test namespace error:', error);
     });
 
     // You can also listen to general 'error' events from the socket
     this.socket.on('error', (error) => {
-      console.error('SocketService: General socket error:', error);
+      // console.error('SocketService: General socket error:', error);
     });
   }
 

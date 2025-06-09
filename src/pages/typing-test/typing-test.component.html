@@ -42,10 +42,10 @@
         <span class="timer-container text-5xl G-SemiBold text-accent">{{timeLeft}}</span>
     
     
-        <div id="words-wrapper" class="words-wrapper relative w-full h-[133px] overflow-scroll border-text-secondary">
+        <div id="words-wrapper" class="words-wrapper relative w-full h-[133px] overflow-auto border-text-secondary">
           <div class="words h-fit pb-2 flex flex-wrap w-full content-start">
             @for (word of oneWord; track $index) {
-              <div class="word relative text-3xl G-SemiBold my-1 mx-1.5">
+              <div #word [class]="`word word-track-${$index} relative text-3xl G-SemiBold my-1 mx-1.5`">
                 @for (char of word; track $index) {
                   <span [ngClass]="{
                           'text-accent opacity-100': char.status === 'correct',
@@ -57,10 +57,11 @@
               </div>
             }
           </div>
-      
-          <input type="text" (input)="onInput($event)" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" class="absolute w-full opacity-0 h-full top-0 left-0 bg-transparent border-none outline-none text-3xl G-SemiBold text-text-primary cursor-text" #inputRef>
-      
+            
         </div>
+
+        <input type="text" (input)="onInput($event)" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" class="absolute pointer-events-none w-auto opacity-0 h-auto top-[40%] z-[-1] left-0 bg-transparent border-none outline-none G-SemiBold text-text-primary cursor-text" #inputRef>
+
     
     
         <!-- @if (this.showResults) {

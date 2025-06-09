@@ -1,0 +1,4 @@
+.words-wrapper{
+    overflow-anchor: none;
+    overscroll-behavior: contain;
+}
