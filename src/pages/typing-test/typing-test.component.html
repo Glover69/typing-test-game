@@ -1,5 +1,5 @@
 
-<section class="entire-component flex flex-col justify-center gap-12 py-16 px-24 w-full h-full bg-bg-primary theme-{{selectedTheme}}">
+<section class="entire-component flex flex-col justify-center gap-12 py-16 px-24 xl:px-48 2xl:px-56 w-full h-full bg-bg-primary theme-{{selectedTheme}}">
 
     @if (!isTimerActive) {
       <div class="animate-this opacity-0 top flex flex-col gap-4">
@@ -42,7 +42,7 @@
         <span class="timer-container text-5xl G-SemiBold text-accent">{{timeLeft}}</span>
     
     
-        <div id="words-wrapper" class="words-wrapper relative w-full h-[133px] overflow-auto border-text-secondary">
+        <div id="words-wrapper" class="words-wrapper relative w-full h-[133px] overflow-hidden border-text-secondary">
           <div class="words h-fit pb-2 flex flex-wrap w-full content-start">
             @for (word of oneWord; track $index) {
               <div #word [class]="`word word-track-${$index} relative text-3xl G-SemiBold my-1 mx-1.5`">
