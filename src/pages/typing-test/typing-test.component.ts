@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostListener, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { CharacterStatus, TypingSessionData, LobbyData, Toast, EachSecond, AppTheme } from '../../models/data.models';
+import { CharacterStatus, TypingSessionData, LobbyData, Toast, EachSecond, AppTheme, LeaderboardUpdateData, PlayerLeaderboardEntry } from '../../models/data.models';
 import { LobbyService } from '../../services/lobby.service';
 import { TextProviderService } from '../../services/text-provider.service';
 import { ToastService } from '../../services/toast.service';
@@ -10,6 +10,8 @@ import { ButtonComponent } from '../../components/button.component';
 import { InputRegularComponent } from '../../components/inputs/input-regular.component';
 import gsap from 'gsap';
 import { ThemeService } from '../../services/theme.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { generatePlayerColor, styleMultiplayerCursor } from '../../utils/utils';
 
 type WordTracking = {
   wordIndex: number;
@@ -18,7 +20,7 @@ type WordTracking = {
 
 @Component({
   selector: 'app-typing-test',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, InputRegularComponent, ButtonComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './typing-test.component.html',
   styleUrl: './typing-test.component.css'
 })
@@ -66,6 +68,9 @@ export class TypingTestComponent implements AfterViewInit{
 
   isMultiplayerMode: boolean = false
   playerName = '';
+
+  private lobbyCode: string | null = null;
+
   
   // lobbyData!: LobbyData;
 
@@ -75,7 +80,7 @@ export class TypingTestComponent implements AfterViewInit{
   currentLobby: LobbyData | null = null;
 
   previousAbsoluteCursorTop: number | null = null; // Stores the absolute top position from the PREVIOUS calculation
-
+  countdownDisplay: number = 0; // For countdown display
 
   selectedTheme!: AppTheme; // This will hold the theme class name
   private themeSubscription!: Subscription;
@@ -83,151 +88,296 @@ export class TypingTestComponent implements AfterViewInit{
 
   initialOffsetTopValue: number = 0
   private isScrolling = false; // purely internal state
-
+  myPlayerID: any = ''; // Player ID for multiplayer tracking
 
 
   currentWordIndex = 0;
   currentCharIndex = 0; // Tracks position within the *displayed* word for status updates
+  currentGlobalIndex = 0
   isWordFinished = false; // Flag to check if current word typing is done
 
-  constructor(private textProvider: TextProviderService, private themeService: ThemeService, private toastService: ToastService, private lobbyService: LobbyService) {}
+  constructor(private router: Router, private route: ActivatedRoute, private textProvider: TextProviderService, public themeService: ThemeService, private toastService: ToastService, private lobbyService: LobbyService) {}
 
 
   ngOnInit(): void {
-    this.generateWords();
+    this.websocketConnections();
+
+    const parsedData = JSON.parse(localStorage.getItem('status') || '{}');
+    this.myPlayerID = parsedData.id || ''; // Get player ID from local storage
+    console.log('My Player ID:', this.myPlayerID);
+
+    // get route from url
+    this.lobbyCode = this.route.snapshot.paramMap.get('lobbyCode');
+
+    const navigation = this.router.getCurrentNavigation();
+
+    const lobbyData = navigation?.extras?.state
+    if (lobbyData) {
+      // Fresh navigation with state data
+      this.isMultiplayerMode = lobbyData['isMultiplayer'] || false;
+      this.currentLobby = lobbyData['lobbyData'] as LobbyData;
+      // this.playerName = lobbyData['playerName'] || '';
+
+      
+      console.log('Navigation state data:', lobbyData);
+    }else{
+      // Fallback: page refresh or direct navigation
+      this.isMultiplayerMode = this.lobbyCode !== 'local' && this.lobbyCode !== null;
+      
+      if (this.isMultiplayerMode) {
+        // Try to get from service
+        this.currentLobby = this.lobbyService.getCurrentGameSession();
+        
+        if (!this.currentLobby) {
+          // No lobby data available, redirect to home
+          console.error('No lobby data found, redirecting to home');
+          this.router.navigate(['/']);
+          return;
+        }
+      }
+    }
+
+    // Initialize the appropriate game mode
+    if (this.isMultiplayerMode && this.currentLobby) {
+      this.setupMultiplayerGame();
+    } else {
+      this.setupLocalGame();
+    }
+
+    // this.generateWords();
 
     // Subscribe to theme changes
     this.themeSubscription = this.themeService.currentThemeClassName$.subscribe(themeClass => {
       this.selectedTheme = themeClass;
-      // console.log('Current theme class in AppComponent:', this.selectedTheme);
     });
+  }
 
-    // this.subscriptions.add(
-    //   this.lobbyService.onLobbyCreated().subscribe(
-    //     (lobby) => {
-    //     console.log('Component: Lobby created with code:', lobby.code);
-    //     this.currentLobby = lobby;
-    //     this.toastService.showToast('Lobby Created', `Your lobby code was created successfully!`);
-    //     }
-    // ));
+  // websocketConnections(){
+  //   this.subscriptions.add(
+  //     this.lobbyService.onLeaderboardUpdate().subscribe({
+  //       next: (leaderboard: any) => {
+  //         const parsedLeaderboard = JSON.parse(leaderboard);
+  //         console.log('Received leaderboard update:', parsedLeaderboard);
+  //         parsedLeaderboard.forEach((player: any) => {
+  //           if (player.playerId !== this.myPlayerID) {
+  //             const targetChar = document.querySelector(`[data-char-index="${player.cursorIndex}"]`) as HTMLElement;
+  //             console.log('Found element:', targetChar);
+  //             if (targetChar) {
+  //               this.renderMultiplayerCursor(targetChar, player);
+  //             }
+  //           }
+  //         });
+  //       }
+  //     })
+  //   )
+  // }
 
-    // this.subscriptions.add(
-    //   this.lobbyService.onJoinedLobby().subscribe(
-    //     (lobbyData) => {
-    //       console.log('Component: Successfully joined lobby:', lobbyData);
-    //       this.currentLobby = lobbyData;
-    //       this.toastService.showToast('Lobby Joined', `You joined lobby ${this.currentLobby.code} succesfully!`);
-    //     }
-    //   )
-    // );
+  websocketConnections() { // Or ngOnInit, or wherever you set up subscriptions
+    this.subscriptions.add(
+      this.lobbyService.onLeaderboardUpdate().subscribe({
+        next: (updateData: LeaderboardUpdateData) => { // updateData is { leaderboard: [...], timeLeft: ... }
+          console.log('Component: Received leaderboard update:', updateData);
+          
+          const leaderboardArray: PlayerLeaderboardEntry[] = updateData.leaderboard;
+          const timeLeft: number = updateData.timeLeft;
+  
+          // You can now use timeLeft to update a timer display, for example
+          // this.gameTimeLeft = timeLeft;
+  
+          leaderboardArray.forEach((player: PlayerLeaderboardEntry) => {
+            // Ensure myPlayerID is correctly set in your component.
+            // It should be the ID of the current client's player.
+            if (player.id !== this.myPlayerID) { // Compare with player.id from the leaderboard entry
+              const targetChar = document.querySelector(`[data-char-index="${player.cursorIndex}"]`) as HTMLElement;
+              // console.log(`Processing player ${player.name} (ID: ${player.id}), cursor: ${player.cursorIndex}. Found element:`, targetChar);
+              if (targetChar) {
+                this.renderMultiplayerCursor(targetChar, player); // Pass the player object
+              }
+            } else {
+              // This is the current player, you might want to update their own WPM/accuracy display
+              // console.log(`My stats: WPM=${player.wpm}, Accuracy=${player.accuracy}`);
+              // this.myWpm = player.wpm;
+              // this.myAccuracy = player.accuracy;
+            }
+          });
+        },
+        error: (err) => {
+          console.error('Error receiving leaderboard update:', err);
+        }
+      })
+    );
+  }
 
-    // this.subscriptions.add(
-    //   this.lobbyService.onPlayerJoined().subscribe(
-    //     (playerJoinInfo) => {
-    //       console.log('Component: A new player joined:', playerJoinInfo);
-    //       this.toastService.showToast('New Player!', `${playerJoinInfo.playerName} has joined the lobby!`);
+  
 
-    //       if (this.currentLobby) {
-    //         // Update the player list in the current lobby
-    //         this.currentLobby.players = playerJoinInfo.players;
-    //       }
-    //       // Update UI
-    //     }
-    //   )
-    // );
 
-    // this.subscriptions.add(
-    //   this.lobbyService.onLobbyError().subscribe(
-    //     (errorMsg) => {
-    //       // this.errorMessage = errorMsg;
-    //       console.error('Component: Lobby error:', errorMsg);
-    //       // Display error to user
-    //     }
-    //   )
-    // );
+  renderMultiplayerCursor(targetEl: HTMLElement, playerData: PlayerLeaderboardEntry) {
+    let cursorEl = document.getElementById(`cursor-${playerData.name}`);
+    if (!cursorEl) {
+      const playerColor = generatePlayerColor(playerData.name);
+
+      cursorEl = document.createElement('div');
+      cursorEl.id = `cursor-${playerData.name}`;
+      cursorEl.className = 'multiplayer-cursor';
+      cursorEl.innerHTML = `<span class="player-name-tag">${playerData.name}</span>`;
+
+      // Apply the generated color
+      cursorEl.style.backgroundColor = playerColor;
+      cursorEl.style.borderColor = playerColor;
+  
+      styleMultiplayerCursor(cursorEl, playerColor);
+      document.body.appendChild(cursorEl);
+    }
+  
+    const rect = targetEl.getBoundingClientRect();
+    cursorEl.style.position = 'absolute';
+    cursorEl.style.left = `${rect.left}px`;
+    cursorEl.style.top = `${rect.top - 20}px`;
+  }
+
+  changeTheme(themeClassName: string): void {
+    this.themeService.setTheme(themeClassName);
+  }
+
+  private setupMultiplayerGame(): void {
+    console.log('Setting up multiplayer game with lobby:', this.currentLobby);
+
+    this.changeTime(this.currentLobby?.timeLimit); // Default to first time if not provided
+    // this.selectedTime = this.currentLobby?.timeLimit;
+    
+    
+    if (this.currentLobby?.words && this.currentLobby.words.length > 0) {
+      // Use the words provided by the server
+      this.useProvidedWords(this.currentLobby.words);
+
+      if(this.currentLobby){
+        // Calculate delay until countdown should begin
+        const now = Date.now();
+        const delay = this.currentLobby?.countdownStartTime - now;
+  
+        // Wait until the exact moment
+        setTimeout(() => {
+          this.startCountdown(this.currentLobby?.timeLimit); // Begins the visible 3..2..1 countdown
+        }, delay);
+      }
+
+    } else {
+      console.error('No words provided in lobby data');
+    }
+  }
+
+  private setupLocalGame(): void {
+    console.log('Setting up local game');
+    // Your existing word generation logic
+    this.generateWords();
+  }
+
+  startCountdown(duration: number | undefined) {
+    let count = 3;
+    const interval = setInterval(() => {
+      this.countdownDisplay = count;
+      console.log(this.countdownDisplay)
+      count--;
+      if (count < 0) {
+        clearInterval(interval);
+        // this.beginTypingPhase(); // Game begins!
+        this.startTimer()
+      }
+    }, 1000);
   }
 
 
+  private useProvidedWords(words: string[]): void {
+    console.log('Using provided words:', words);
+    let globalIndex = 0; // Initialize global index for each character
+
+    
+    // Clear existing words
+    this.oneWord = [];
+    
+    // Convert words to your CharacterStatus format
+    words.forEach((word) => {
+      let aWord: CharacterStatus[] = [];
+      word.split('').forEach((char) => {
+        const item: CharacterStatus = {
+          char: char,
+          status: 'untyped',
+          globalIndex: globalIndex
+        };
+        aWord.push(item);
+        globalIndex++
+      });
+      
+      // Add space after each word (except maybe the last one)
+      aWord.push({ char: ' ', status: 'untyped', globalIndex: globalIndex });
+      globalIndex++; // INCREMENT for the space character
+      this.oneWord.push(aWord);
+    });
+    
+    // Set first character as active
+    if (this.oneWord.length > 0 && this.oneWord[0].length > 0) {
+      this.oneWord[0][0].status = 'active';
+      this.currentGlobalIndex = this.oneWord[0][0].globalIndex;
+
+    }
+
+     // Defer animation until after Angular has processed DOM changes
+     setTimeout(() => {
+      this.animateThis();
+      // Also, re-focus after DOM is likely settled from generateWords
+      this.inputElement?.nativeElement.focus({ preventScroll: true });
+      // Re-populate word tracking array as words have changed
+      if (this.words && this.words.length) { // Check if words QueryList is available
+        this.createWordArray(); 
+        if (this.arrayForTracking.length > 0) {
+          this.initialOffsetTopValue = this.arrayForTracking[0].offsetTop;
+        }
+      }
+    }, 0);
+    
+    // // Update UI
+    // this.updateWordsDisplay();
+  }
+
   animateThis(){
     const element = document.querySelectorAll('.animate-this')
+    console.log('Elements found by animateThis:', element); // For debugging
 
-    gsap.fromTo(element, {
-      opacity: 0,
-      y: 70
-    }, {
-      opacity: 1,
-      y: 0,
-      ease: 'power3.out',
-      duration: 1,
-      delay: 0.5,
-      onComplete: () => {
-        console.log('Animation complete');
-        console.log(this.showResults)
-        // You can perform any additional actions here after the animation completes
-      }
-    });
+    if (element.length > 0) {
+      gsap.fromTo(
+        element,
+        {
+          opacity: 0,
+          y: 70,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          ease: 'power3.out',
+          duration: 1,
+          delay: 0.1, // Reduced delay slightly, ensure it's for animation, not DOM readiness
+          stagger: 0.1, // Optional: if you want a slight stagger between multiple .animate-this blocks
+          onComplete: () => {
+            console.log('Animation complete for .animate-this elements');
+          },
+        }
+      );
+    } else {
+      console.warn('.animate-this elements not found for animation.');
+    }
 
   }
 
   ngAfterViewInit(): void {
     this.inputElement?.nativeElement.focus();
-    setTimeout(() => {
-      this.calculateAndStoreInitialPosition()
-      console.log('Position: ' ,this.verticalScrollPosition)
 
-    }, 0)
-
-    this.animateThis()
+    // this.animateThis()
     this.createWordArray();
     console.log("All words for tracking in DOM: ", this.arrayForTracking)
     this.initialOffsetTopValue = this.arrayForTracking[0].offsetTop
-
-
-
-    // console.log('Position: ' ,this.verticalScrollPosition)
-
-    // const divElement: HTMLDivElement = document.getElementById('words-wrapper') as HTMLDivElement;
-
-    // this.verticalScrollPosition = divElement.scrollTop;
-    // console.log('Scroll Position at component initialization: ', this.verticalScrollPosition)
-
-    // const spanCursor = divElement.querySelector('.cursor') as HTMLElement | null;
-
-    // if(spanCursor){
-    //   this.cursorRect = Math.round(spanCursor.getBoundingClientRect().top)
-    //   this.wrapperRect = Math.round(divElement.getBoundingClientRect().top)
-    //   this.distanceViaRect = this.cursorRect - this.wrapperRect;
-    //   this.absoluteCursorTop = this.verticalScrollPosition + this.distanceViaRect
-    //   localStorage.setItem('previousAbsoluteCursorTop', this.absoluteCursorTop.toString())
-    //   console.log(`Cursor position updated: ${this.absoluteCursorTop}`); 
-    // }
     
   }
 
-calculateAndStoreInitialPosition() {
-    const divElement: HTMLDivElement = document.getElementById('words-wrapper') as HTMLDivElement;
-    if (!divElement) return;
-    const spanCursor = divElement.querySelector('.cursor') as HTMLElement | null;
-
-    if (spanCursor) {
-        const currentScrollTop = divElement.scrollTop; // Should be 0 initially, but read just in case
-        const cursorRect = spanCursor.getBoundingClientRect();
-        const wrapperRect = divElement.getBoundingClientRect();
-
-        // Calculate initial absolute top
-        const currentRelativeTop = Math.round(cursorRect.top - wrapperRect.top);
-        const initialAbsoluteTop = currentScrollTop + currentRelativeTop;
-
-        // Store it as the "previous" value for the first comparison later
-        this.previousAbsoluteCursorTop = initialAbsoluteTop;
-        // Store line height as well
-        this.lineHeight = Math.round(cursorRect.height);
-
-        console.log(`Initial Position Calculated -> Absolute Top: ${this.previousAbsoluteCursorTop}, Line Height: ${this.lineHeight}`);
-    } else {
-        console.warn("Could not find initial cursor to calculate position.");
-    }
-}
 
 changeTime(time: any){
   this.timeLeft = time
@@ -236,11 +386,6 @@ changeTime(time: any){
   this.inputElement?.nativeElement.focus(); // Keep focus on input after time change
 }
 
-restartGame(){
-  this.animateThis()
-  this.oneWord.splice(0, 99)
-  this.generateWords();
-}
 
 resetTimer(){
   // reset time and set variable to false
@@ -316,13 +461,11 @@ calculateAccuracy(): number {
 handleTimeUp(){
   // calculate WPM and accuracy
   console.log('Time up nigga!')
-  // this.getCharacterAndAttemptsCount();
 
   if(this.correctCharacterCount > 0){
     this.calculateWPM()
   }
 
-  // let accuracy = 0
   if(this.totalAttemptedCharacters > 0){
      this.calculateAccuracy()
   }else{
@@ -348,7 +491,6 @@ startTimer(){
   }
 
   this.isTimerActive = true
-  // this.timeLeft = 15
 
   this.timerID = setInterval(() => {
 
@@ -360,10 +502,8 @@ startTimer(){
 
     this.typingSession.allSeconds?.push(eachSecond)
 
-
-    // console.log('Each Second: ', eachSecond);
     const newTime = this.timeLeft--
-
+    this.updateProgress()
 
     if(this.timeLeft <= 0){
       this.stopTimer();
@@ -409,6 +549,8 @@ startTimer(){
   generateWords() {
     this.currentWordIndex = 0;
     this.currentCharIndex = 0;
+    this.currentGlobalIndex = 0;
+
     this.isWordFinished = false;
 
     // this.changeTime(this.time[0])
@@ -425,12 +567,10 @@ startTimer(){
     this.totalAttemptedCharacters = 0; // Ensure this is reset
 
 
-    // this.typingSession.timeSelected = this.timeLeft
-    // console.log('Time selected: ', this.typingSession.timeSelected)
-
-
+    this.oneWord = []; // Clear existing words before generating new ones
     // Generate random words from our pool of words
     const allWords = this.textProvider.getRandomWords(100);
+    let globalIndex = 0; // Initialize global index for each character
 
     // For each word, split into characters
     allWords.forEach((word) => {
@@ -440,16 +580,21 @@ startTimer(){
         const item: CharacterStatus = {
           char: char,
           status: 'untyped',
+          globalIndex: globalIndex
         };
+
+        globalIndex++
 
         aWord.push(item);
       });
 
       // Add a space character object to the end of the current word's array
-      aWord.push({ char: ' ', status: 'untyped' });
+      aWord.push({ char: ' ', status: 'untyped', globalIndex: globalIndex });
 
       if (this.oneWord.length > 0 && this.oneWord[0].length > 0) {
         this.oneWord[0][0].status = 'active';
+        this.currentGlobalIndex = this.oneWord[0][0].globalIndex;
+
       }
 
       // Push each word's splitted objects as well into the oneWord array,
@@ -459,6 +604,20 @@ startTimer(){
     });
 
     console.log('All words: ', this.oneWord)
+
+     // Defer animation until after Angular has processed DOM changes
+     setTimeout(() => {
+      this.animateThis();
+      // Also, re-focus after DOM is likely settled from generateWords
+      this.inputElement?.nativeElement.focus({ preventScroll: true });
+      // Re-populate word tracking array as words have changed
+      if (this.words && this.words.length) { // Check if words QueryList is available
+        this.createWordArray(); 
+        if (this.arrayForTracking.length > 0) {
+          this.initialOffsetTopValue = this.arrayForTracking[0].offsetTop;
+        }
+      }
+    }, 0);
   }
 
   // Handles character input from the hidden text input
@@ -486,6 +645,7 @@ startTimer(){
     // Establish both the current word and current characters
     let currentWord = this.oneWord[this.currentWordIndex];
     let currentChar = currentWord[this.currentCharIndex];
+    this.currentGlobalIndex = currentChar.globalIndex;
 
     // We wanna handle backspace to move the index back because
     // the user is clearing a character(s)
@@ -501,12 +661,12 @@ startTimer(){
       // You also can't move back to a previous word
       // so at index = 0, nothing happens
       if (this.currentCharIndex !== 0) {
+        currentChar.status = 'untyped'
         this.currentCharIndex--;
         currentChar = currentWord[this.currentCharIndex];
-        // console.log(`Backspace so index goes to ${this.currentCharIndex}`);
-        // console.log('After backspace: ', currentChar);
-
         currentChar.status = 'active';
+        this.currentGlobalIndex = currentChar.globalIndex;
+
       }
     }
   }
@@ -520,6 +680,9 @@ startTimer(){
     const divElement: HTMLDivElement = document.getElementById(
       'words-wrapper'
     ) as HTMLDivElement;
+
+    this.currentGlobalIndex = currentChar.globalIndex;
+
     
     // We check whether they're equal
     // (user input and desired character)
@@ -527,9 +690,11 @@ startTimer(){
       currentChar.status = 'correct';
       this.correctCharacterCount++; 
       this.totalAttemptedCharacters++; 
+
     } else {
       currentChar.status = 'incorrect';
       this.totalAttemptedCharacters++; 
+
     }
 
     // After that we increase the count and then check if
@@ -538,10 +703,19 @@ startTimer(){
     if (this.currentCharIndex < currentWord.length) {
       // if not, the next character is active
       currentWord[this.currentCharIndex].status = 'active';
+      this.currentGlobalIndex = currentWord[this.currentCharIndex].globalIndex;
+
     } else {
       // If it is, reset the character count and move to the next word
       this.currentCharIndex = 0;
       this.currentWordIndex++;
+
+      // UPDATE: Set currentGlobalIndex to the first character of the next word
+      if (this.currentWordIndex < this.oneWord.length) {
+        this.oneWord[this.currentWordIndex][0].status = 'active';
+        this.currentGlobalIndex = this.oneWord[this.currentWordIndex][0].globalIndex;
+      }
+
     }
 
     // Calculate & scroll
@@ -586,30 +760,40 @@ startTimer(){
   }
 
 
-  // createLobby() {
-  //   if (this.playerName.trim()) {
-  //     this.lobbyService.createLobby(this.playerName.trim());
-  //   } else {
-  //     console.log("Please enter a player name.");
-  //   }
-  // }
 
-  // joinLobby(){
-  //   const data = {
-  //     code: this.lobbyCodeForJoining.trim(),
-  //     playerName: this.playerName.trim()
-  //   }
 
-  //   if(data.playerName && data.code){
-  //     console.log('Joining lobby with data: ', data);
-  //     this.lobbyService.joinLobby(data);
-  //   }else{
-  //     console.log("misssing player name or lobby code");
-  //   }
 
-  // }
+
+  updateProgress(){
+
+    let status: { status: string, name: string };
+    const statusString = localStorage.getItem('status');
+
+    if(this.currentLobby?.code && this.currentLobby.players && statusString){
+      
+      status = JSON.parse(statusString);
+
+      console.log(`Current lobby: ${this.currentLobby}`);
+      const data = {
+        code: this.currentLobby.code,
+        id: this.currentLobby.players.find(player => player.name === status.name)?.id || '',
+        playerName: status.name,
+        cursorIndex: this.currentGlobalIndex,
+        correctCharacters: this.correctCharacterCount,
+        totalTypedCharacters: this.totalAttemptedCharacters,
+      }
+
+      console.log('Updating progress with data:', data);
+      this.lobbyService.playerProgressUpdate(data)
+    }else{
+      console.log('No lobby code or players found, cannot update progress');
+      this.toastService.showToast('Error', 'Cannot update progress, no lobby data available.')
+      return;
+    }
+  }
+
 
   ngOnDestroy(): void {
-    this.subscriptions.unsubscribe(); // Unsubscribe from all subscriptions
+    this.subscriptions.unsubscribe();
   }
 }

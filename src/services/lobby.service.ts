@@ -1,18 +1,50 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Observable } from 'rxjs';
-import { LobbyJoinData, LobbyData, PlayerJoinedData } from '../models/data.models';
+import { LobbyJoinData, LobbyData, PlayerJoinedData, LeaderboardUpdateData } from '../models/data.models';
 
 @Injectable({ providedIn: 'root' })
 export class LobbyService {
+  private currentGameSession: LobbyData | null = null;
+
   constructor(private socket: Socket) {
 
-    this.socket = io('https://light-frank-crayfish.ngrok-free.app/typing-test', {
+    this.socket = io('https://centralbackend-zkz2.onrender.com/typing-test', {
       path: "/socket",
       transports: ['websocket', 'polling'] // Good practice to specify transports
     });
 
     this.setupConnectionHandlers();
+  }
+
+
+  setCurrentGameSession(lobbyData: LobbyData): void {
+    this.currentGameSession = lobbyData;
+    // Optionally store in sessionStorage for browser refresh scenarios
+    sessionStorage.setItem('currentGameSession', JSON.stringify(lobbyData));
+  }
+
+  getCurrentGameSession(): LobbyData | null {
+    if (this.currentGameSession) {
+      return this.currentGameSession;
+    }
+    
+    // Fallback: try to get from sessionStorage
+    const stored = sessionStorage.getItem('currentGameSession');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        console.error('Error parsing stored game session:', e);
+      }
+    }
+    
+    return null;
+  }
+
+  clearCurrentGameSession(): void {
+    this.currentGameSession = null;
+    sessionStorage.removeItem('currentGameSession');
   }
 
 
@@ -111,6 +143,43 @@ export class LobbyService {
     });
   }
 
+  // onLeaderboardUpdate(): Observable<LobbyData> {
+  //   return new Observable<LobbyData>((observer) => {
+  //   this.socket.on('leaderboard-update', ({ leaderboard }) => {
+  //     console.log('[Angular SocketService] Received "leaderboard-update" event with data:', leaderboard);
+  //     observer.next(leaderboard);
+
+  //     return () => this.socket.off('leaderboard-update');
+  //     // leaderboard.forEach(player => {
+  //     //   if (player.playerId !== this.myPlayerId) {
+  //     //     const targetChar = document.querySelector(`[data-char-index="${player.cursorIndex}"]`);
+  //     //     if (targetChar) {
+  //     //       this.renderMultiplayerCursor(targetChar, player);
+  //     //     }
+  //     //   }
+  //     // });
+  //   });
+  //   }
+  // )}
+
+
+  onLeaderboardUpdate(): Observable<LeaderboardUpdateData> {
+    return new Observable<LeaderboardUpdateData>((observer) => {
+      this.socket.on('leaderboard-update', (data: LeaderboardUpdateData) => {
+        // The 'data' here is the full object: { leaderboard: [...], timeLeft: ... }
+        console.log('[Angular SocketService] Received "leaderboard-update" event with data:', data);
+        observer.next(data); // Emit the full data object
+      });
+  
+      // Cleanup function: This is called when the observable is unsubscribed
+      return () => {
+        this.socket.off('leaderboard-update');
+        console.log('[Angular SocketService] Unsubscribed from "leaderboard-update"');
+      };
+    });
+  }
+
+
   // This event is for the player who is readying up
   onPlayerReady(): Observable<LobbyData> {
     return new Observable<LobbyData>((observer) => {
@@ -164,6 +233,15 @@ export class LobbyService {
     }
     console.log(`[Angular SocketService] Emitting "startGame" for lobby: ${data}`);
     this.socket.emit('startGame', data);
+  }
+
+  playerProgressUpdate(data: { code: string, id: string, playerName: string, cursorIndex: number, correctCharacters: number, totalTypedCharacters: number }): void {
+    if (!this.socket.connected) {
+      console.error('SocketService: Socket not connected. Cannot update player progress.');
+      return;
+    }
+    console.log(`[Angular SocketService] Emitting "playerProgressUpdate" for lobby: ${data.code}`);
+    this.socket.emit('updateProgress', data);
   }
 
 }

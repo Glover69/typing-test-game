@@ -1,6 +1,21 @@
 export type CharacterStatus = {
     char: string;
-    status: 'untyped' | 'correct' | 'incorrect' | 'active'; 
+    status: 'untyped' | 'correct' | 'incorrect' | 'active';
+    globalIndex: number;
+}
+
+// In a relevant interfaces file (e.g., lobby.interfaces.ts) or within the service
+export interface PlayerLeaderboardEntry {
+  id: string;
+  name: string;
+  cursorIndex: number;
+  wpm: number;
+  accuracy: number;
+}
+
+export interface LeaderboardUpdateData {
+  leaderboard: PlayerLeaderboardEntry[];
+  timeLeft: number;
 }
 
 export type TypingSessionData = {
@@ -37,6 +52,7 @@ export interface Player {
     players: Player[];
     words: string[];
     isActive: boolean;
+    countdownStartTime: number;
   }
   
   export interface PlayerJoinedData {

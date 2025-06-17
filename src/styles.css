@@ -190,17 +190,6 @@ option:disabled {
 
 
 
-
-  .content-grid {
-    --padding-inline: 2rem;
-    --content-max-width: 1536px;
-    --breakout-size: calc((calc(var(--content-max-width) + 12rem) - var(--content-max-width)) / 2);
-    justify-content: center;
-    display: grid;
-    grid-template-columns: [full-width-start] var(--padding-inline) [full-width-padding-start] minmax(0, 1fr) [breakout-start] minmax(0, var(--breakout-size)) [content-start] min(100% - var(--padding-inline) * 2, var(--content-max-width)) [content-end] minmax(0, var(--breakout-size)) [breakout-end] minmax(0, 1fr) [full-width-padding-end] var(--padding-inline) [full-width-end];
-}
-
-
 @theme {
   --color-accent: #CBA6F7;
   --color-bg-primary: #1E1E2E;

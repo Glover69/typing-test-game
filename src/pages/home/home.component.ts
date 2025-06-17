@@ -14,7 +14,7 @@ import gsap from 'gsap';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ButtonComponent, InputRegularComponent],
+  imports: [CommonModule, RouterModule, FormsModule, InputRegularComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
@@ -167,13 +167,24 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
       // 2. Reverse the main timeline (text and buttons)
       this.mainTimeline.eventCallback("onReverseComplete", () => {
         console.log("Main timeline reverse complete. Navigating...");
-        this.router.navigate(['/game']);
+        // Navigate to local game
+        this.router.navigate(['/game', 'local'], {
+          state: { 
+            isMultiplayer: false,
+            gameMode: 'local'
+          }
+        });
         this.mainTimeline?.eventCallback("onReverseComplete", null); // Clean up callback
       });
       this.mainTimeline.reverse();
     } else {
-      // Fallback if timeline wasn't created
-      this.router.navigate(['/game']);
+      // Fallback
+      this.router.navigate(['/game', 'local'], {
+        state: { 
+          isMultiplayer: false,
+          gameMode: 'local'
+        }
+      });
     }
   }
 
@@ -186,6 +197,14 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         console.log('Component: Lobby created with code:', lobby.code);
         this.currentLobby = lobby;
         this.toastService.showToast('Lobby Created', `Your lobby code was created successfully!`);
+
+        const status = {
+          status: 'host',
+          name: this.playerName,
+          id: this.currentLobby.players.find(player => player.name === this.playerName)?.id || null
+        }
+        
+        localStorage.setItem('status', JSON.stringify(status))
         }
     ));
 
@@ -196,6 +215,14 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
           this.currentLobby = lobbyData;
           this.toastService.showToast('Lobby Joined', `You joined lobby ${this.currentLobby.code} succesfully!`);
           this.currentPlayer = this.currentLobby.players.find(player => player.name === this.playerName) || null;
+
+          const status = {
+            status: 'player',
+            name: this.currentPlayer?.name,
+            id: this.currentPlayer?.id || null
+          }
+
+          localStorage.setItem('status', JSON.stringify(status))
         }
       )
     );
@@ -217,10 +244,19 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         (lobbyData) => {
           console.log('Component: Game started:', lobbyData);
           this.currentLobby = lobbyData;
+
+          // Store in service for backup access
+          this.lobbyService.setCurrentGameSession(lobbyData);
+
           this.toastService.showToast('Game Started', `The game has started!`);
           // Navigate to the game page or update UI accordingly
           this.isGameStarted = true;
-          this.router.navigate(['/game']);
+          this.router.navigate(['/game', lobbyData.code], {
+            state: { 
+              lobbyData: lobbyData,
+              isMultiplayer: true,
+             } // Pass the lobby data to the game component
+          });
         }
       )
     );

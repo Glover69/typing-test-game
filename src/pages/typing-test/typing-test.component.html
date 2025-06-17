@@ -24,14 +24,14 @@
         </div>
   
         @if (this.showResults) {
-          <span (click)="restartGame()" class="options relative py-2 rounded-lg flex items-center justify-center G-SemiBold tracking-tight text-text-primary cursor-pointer ">Reset Game</span>
+          <span (click)="generateWords()" class="options relative py-2 rounded-lg flex items-center justify-center G-SemiBold tracking-tight text-text-primary cursor-pointer ">Reset Game</span>
         }
       </div>
 
     }@else {
       <div class="animate-this opacity-0 flex flex-col items-center gap-4 w-full">
   
-        @if (!isTimerActive) {
+        @if (!isTimerActive && !isMultiplayerMode) {
           <div class="time-list flex items-center gap-3">
             @for (item of time; track $index) {
               <button (click)="changeTime(item)" [ngClass]="{'text-accent G-SemiBold': item === timeLeft, 'text-text-primary': item !== timeLeft}" class="single-time cursor-pointer">{{item}}</button>
@@ -47,7 +47,7 @@
             @for (word of oneWord; track $index) {
               <div #word [class]="`word word-track-${$index} relative text-3xl G-SemiBold my-1 mx-1.5`">
                 @for (char of word; track $index) {
-                  <span [ngClass]="{
+                  <span [attr.data-char-index]="char.globalIndex" [ngClass]="{
                           'text-accent opacity-100': char.status === 'correct',
                           'text-red-500 opacity-100 underline': char.status === 'incorrect',
                           'text-text-primary opacity-25': char.status === 'untyped' || char.status === 'active',
@@ -71,28 +71,28 @@
       </div>
     }
   
-    @if (!isTimerActive) {
-  
-      <!-- <div class="flex w-full items-center justify-between">
-        <div class="theme-selector flex gap-4">
-          @for (item of themes; track $index) {
-            <div 
-              (click)="onThemeChange(item)" 
-              class="theme cursor-pointer G-Regular text-sm tracking-tight"
-              [ngClass]="{'text-text-primary': item !== selectedTheme, 'text-accent G-Bold': item === selectedTheme}">
-              {{item}}
-            </div>
-              }
-      
-        </div>
-    
-    
-        <span class="text-text-primary hover:text-accent cursor-pointer" (click)="toggleMultiplayerDialog()">Multiplayer Mode!</span> 
-      </div> -->
-  
-    }
+
     
   </section>
   
   
+  @if (!isTimerActive) {
+  
+    <div class="absolute bottom-16 px-26 flex items-center justify-between w-full">
+      <div class="left text-accent G-Medium text-sm tracking-tight">Made by Daniel Glover w/ love ❤️</div>
+  
+  
+      <div class="theme-selector flex gap-4">
+        @for (item of themeService.availableThemes; track $index) {
+          <div 
+            (click)="changeTheme(item.className)" 
+            class="theme cursor-pointer G-Regular text-sm tracking-tight"
+            [ngClass]="{'text-text-primary': item.className !== selectedTheme.className, 'text-accent G-Bold': item.className === selectedTheme.className}">
+            {{item.name}}
+          </div>
+        }
     
+      </div>
+    </div>
+
+  }

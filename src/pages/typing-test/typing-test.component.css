@@ -2,3 +2,44 @@
     overflow-anchor: none;
     overscroll-behavior: contain;
 }
+
+
+
+
+
+.multiplayer-cursor {
+    pointer-events: none;
+    animation: cursor-blink 1s infinite;
+  }
+  
+  .multiplayer-cursor .player-name-tag {
+    position: relative;
+  }
+  
+  .multiplayer-cursor .player-name-tag.cursor-arrow::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid var(--arrow-color);
+  }
+  
+  @keyframes cursor-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+  }
+  
+  /* Hover effect for better visibility */
+  .multiplayer-cursor:hover {
+    transform: scale(1.1);
+  }
+  
+  .multiplayer-cursor:hover .player-name-tag {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.1);
+  }

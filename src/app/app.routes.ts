@@ -5,5 +5,6 @@ import { HomeComponent } from '../pages/home/home.component';
 export const routes: Routes = [
     {path: '', redirectTo: '', pathMatch: 'full'},
     {path: '', component: HomeComponent},
+    {path: 'game/:lobbyCode', component: TypingTestComponent},
     {path: 'game', component: TypingTestComponent},
 ];
