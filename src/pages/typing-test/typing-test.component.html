@@ -8,6 +8,11 @@
         <span class="G-Medium text-5xl text-accent tracking-tight">Hello There</span>
       </div>
     }
+
+
+    @if (isMultiplayerMode && !isTimerActive && countdownDisplay !== 0) {
+      <span class="absolute text-5xl G-SemiBold top-12 right-12 text-accent">{{countdownDisplay}}</span>
+    }
   
     @if (showResults) {
       <div class="flex flex-col items-center justify-center gap-12">

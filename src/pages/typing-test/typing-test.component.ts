@@ -503,7 +503,9 @@ startTimer(){
     this.typingSession.allSeconds?.push(eachSecond)
 
     const newTime = this.timeLeft--
-    this.updateProgress()
+    if(this.isMultiplayerMode){
+      this.updateProgress()
+    }
 
     if(this.timeLeft <= 0){
       this.stopTimer();
