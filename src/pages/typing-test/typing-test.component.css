@@ -2,21 +2,43 @@
     overflow-anchor: none;
     overscroll-behavior: contain;
 }
+/* 
+Apply transition only to theme-related elements, not typing characters
+.entire-component {
+  @apply transition-colors duration-800 ease-in-out;
+}
 
+.timer-container {
+  @apply transition-colors duration-800 ease-in-out;
+}
 
+.time-list button {
+  @apply transition-colors duration-800 ease-in-out;
+}
 
+.theme-selector .theme {
+  @apply transition-colors duration-800 ease-in-out;
+} */
 
+/* Explicitly disable transitions on typing characters for performance */
+.char {
+  transition: none !important;
+}
+
+.word {
+  transition: none !important;
+}
 
 .multiplayer-cursor {
     pointer-events: none;
     animation: cursor-blink 1s infinite;
-  }
-  
-  .multiplayer-cursor .player-name-tag {
+}
+
+.multiplayer-cursor .player-name-tag {
     position: relative;
-  }
-  
-  .multiplayer-cursor .player-name-tag.cursor-arrow::after {
+}
+
+.multiplayer-cursor .player-name-tag.cursor-arrow::after {
     content: '';
     position: absolute;
     top: 100%;
@@ -27,19 +49,19 @@
     border-left: 4px solid transparent;
     border-right: 4px solid transparent;
     border-top: 4px solid var(--arrow-color);
-  }
-  
-  @keyframes cursor-blink {
+}
+
+@keyframes cursor-blink {
     0%, 50% { opacity: 1; }
     51%, 100% { opacity: 0.3; }
-  }
-  
-  /* Hover effect for better visibility */
-  .multiplayer-cursor:hover {
+}
+
+/* Hover effect for better visibility */
+.multiplayer-cursor:hover {
     transform: scale(1.1);
-  }
-  
-  .multiplayer-cursor:hover .player-name-tag {
+}
+
+.multiplayer-cursor:hover .player-name-tag {
     opacity: 1;
     transform: translateX(-50%) scale(1.1);
-  }
+}

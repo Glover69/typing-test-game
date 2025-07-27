@@ -10,8 +10,9 @@ body {
 }
 
 * {
-  @apply transition-colors duration-500 ease-in-out
+  @apply transition-colors duration-800 ease-in-out
 }
+
 
 /* Hide scrollbar for Webkit-based browsers */
 .scrollbar-hide::-webkit-scrollbar {
