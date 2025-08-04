@@ -27,7 +27,7 @@ import { ButtonComponent } from '../../components/button.component';
 import { InputRegularComponent } from '../../components/inputs/input-regular.component';
 import gsap from 'gsap';
 import { ThemeService } from '../../services/theme.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { generatePlayerColor, styleMultiplayerCursor } from '../../utils/utils';
 
 type WordTracking = {
@@ -37,7 +37,7 @@ type WordTracking = {
 
 @Component({
   selector: 'app-typing-test',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './typing-test.component.html',
   styleUrl: './typing-test.component.css',
 })
@@ -609,17 +609,17 @@ export class TypingTestComponent implements AfterViewInit {
 
       // Add a space character object to the end of the current word's array
       aWord.push({ char: ' ', status: 'untyped', globalIndex: globalIndex });
-
-      if (this.oneWord.length > 0 && this.oneWord[0].length > 0) {
-        this.oneWord[0][0].status = 'active';
-        this.currentGlobalIndex = this.oneWord[0][0].globalIndex;
-      }
-
+      globalIndex++;
       // Push each word's splitted objects as well into the oneWord array,
       // so that you have each word as an array of its characters splitted into objects
       this.oneWord.push(aWord);
       // console.log('Some word bi: ', aWord)
     });
+
+    if (this.oneWord.length > 0 && this.oneWord[0].length > 0) {
+       this.oneWord[0][0].status = 'active';
+       this.currentGlobalIndex = this.oneWord[0][0].globalIndex;
+    }
 
     console.log('All words: ', this.oneWord);
 
