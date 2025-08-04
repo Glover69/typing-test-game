@@ -639,54 +639,6 @@ export class TypingTestComponent implements AfterViewInit {
     }, 0);
   }
 
-  // Handles character input from the hidden text input
-  // onInput(event: Event): void {
-  //   const inputEvent = event as InputEvent;
-  //   const value = (inputEvent.target as HTMLInputElement).value;
-  //   console.log(value);
-
-  //   this.processWords(value.slice(-1)); // Pass the last typed character
-
-  //   // Clear the input field after processing the character
-  //   (inputEvent.target as HTMLInputElement).value = '';
-  // }
-
-  // processWords(typedCharacter: string) {
-  //   // Initially check whether hasTypingStarted is false.
-  //   // If it is, make it true to start
-
-  //   if (!this.hasTypingStarted) {
-  //     this.hasTypingStarted = true;
-  //     this.startTimer();
-  //   }
-
-  //   // Establish both the current word and current characters
-  //   let currentWord = this.oneWord[this.currentWordIndex];
-  //   let currentChar = currentWord[this.currentCharIndex];
-  //   this.currentGlobalIndex = currentChar.globalIndex;
-
-  //   // We wanna handle backspace to move the index back because
-  //   // the user is clearing a character(s)
-  //   if (typedCharacter !== 'Backspace') {
-  //     // We pass it to the core logic
-  //     this.processAWord(typedCharacter, currentChar, currentWord);
-  //   } else {
-  //     // IF backspace is pressed, move the index back by 1
-  //     // and then set the status back to untyped so they can
-  //     // type that character again
-
-  //     // You also can't move back to a previous word
-  //     // so at index = 0, nothing happens
-  //     if (this.currentCharIndex !== 0) {
-  //       currentChar.status = 'untyped';
-  //       this.currentCharIndex--;
-  //       currentChar = currentWord[this.currentCharIndex];
-  //       currentChar.status = 'active';
-  //       this.currentGlobalIndex = currentChar.globalIndex;
-  //     }
-  //   }
-  // }
-
   processWords(typedCharacter: string) {
     if (!this.hasTypingStarted && typedCharacter !== 'Backspace') {
       this.hasTypingStarted = true;
@@ -868,7 +820,8 @@ export class TypingTestComponent implements AfterViewInit {
 
         // Make a change here to rather wpm and accuracy so we
         // send the calculated data rather to the server
-
+        accuracy: this.calculateAccuracy(),
+        wpm: this.calculateWPM(),
         correctCharacters: this.correctCharacterCount,
         totalTypedCharacters: this.totalAttemptedCharacters,
       };

@@ -28,8 +28,10 @@
           </div>
         </div>
   
-        @if (this.showResults) {
+        @if (this.showResults && isMultiplayerMode) {
           <span (click)="generateWords()" class="options relative py-2 rounded-lg flex items-center justify-center G-SemiBold tracking-tight text-text-primary cursor-pointer ">Reset Game</span>
+        }@else {
+          <span routerLink="/" class="options relative py-2 rounded-lg flex items-center justify-center G-SemiBold tracking-tight text-text-primary cursor-pointer ">Return to Home</span>
         }
       </div>
 

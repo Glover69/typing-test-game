@@ -9,7 +9,12 @@ export class LobbyService {
 
   constructor(private socket: Socket) {
 
-    this.socket = io('https://centralbackend-zkz2.onrender.com/typing-test', {
+    // this.socket = io('https://centralbackend-zkz2.onrender.com/typing-test', {
+    //   path: "/socket",
+    //   transports: ['websocket', 'polling'] // Good practice to specify transports
+    // });
+
+    this.socket = io('http://localhost:2005/typing-test', {
       path: "/socket",
       transports: ['websocket', 'polling'] // Good practice to specify transports
     });
@@ -191,6 +196,18 @@ export class LobbyService {
       return () => this.socket.off('selfReadyStatusConfirmed');
     });
   }
+
+  // This event listens for when OTHER players ready up
+onPlayerReadyStatusUpdate(): Observable<any> {
+  return new Observable<any>((observer) => {
+    this.socket.on('playerReadyStatusUpdate', (data: any) => {
+      console.log('[Angular SocketService] Received "playerReadyStatusUpdate" event with data:', data);
+      observer.next(data);
+    });
+    // Cleanup when observable is unsubscribed
+    return () => this.socket.off('playerReadyStatusUpdate');
+  });
+}
 
   // This event is for when thr game has been started
   onGameStarted(): Observable<LobbyData> {

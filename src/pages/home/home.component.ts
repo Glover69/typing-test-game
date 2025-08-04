@@ -196,7 +196,7 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         (lobby) => {
         console.log('Component: Lobby created with code:', lobby.code);
         this.currentLobby = lobby;
-        this.toastService.showToast('Lobby Created', `Your lobby code was created successfully!`);
+        this.toastService.showToast('Lobby Created', `Your lobby was created successfully!`);
 
         const status = {
           status: 'host',
@@ -287,6 +287,25 @@ export class HomeComponent implements AfterViewInit, OnDestroy {
         }
       )
     );
+
+    this.subscriptions.add(
+    this.lobbyService.onPlayerReadyStatusUpdate().subscribe({
+      next: (data: any) => {
+        console.log('Player ready status update received:', data);
+        // Update your local lobby data with the new player list
+        if (this.currentLobby) {
+          this.currentLobby.players = data.players;
+          const currentPlayer = data?.playerName
+          this.toastService.showToast('Ready Status', `${currentPlayer} is now ready!`);
+
+          // You might want to update UI here to show which players are ready
+        }
+      },
+      error: (error) => {
+        console.error('Error receiving player ready status update:', error);
+      }
+    })
+  );
   }
 
   toggleMultiplayerDialog(){

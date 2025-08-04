@@ -1,7 +1,7 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { io, Socket } from 'socket.io-client'; // Import Socket and io from socket.io-client
-const SOCKET_SERVER_URL = 'https://centralbackend-zkz2.onrender.com'; // Your backend WebSocket server URL
+const SOCKET_SERVER_URL = 'http://localhost:2005'; // Your backend WebSocket server URL
 import { provideLottieOptions } from 'ngx-lottie';
 
 
