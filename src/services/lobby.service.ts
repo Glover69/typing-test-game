@@ -9,15 +9,15 @@ export class LobbyService {
 
   constructor(private socket: Socket) {
 
-    // this.socket = io('https://centralbackend-zkz2.onrender.com/typing-test', {
-    //   path: "/socket",
-    //   transports: ['websocket', 'polling'] // Good practice to specify transports
-    // });
-
-    this.socket = io('http://localhost:2005/typing-test', {
+    this.socket = io('https://centralbackend-zkz2.onrender.com/typing-test', {
       path: "/socket",
       transports: ['websocket', 'polling'] // Good practice to specify transports
     });
+
+    // this.socket = io('http://localhost:2005/typing-test', {
+    //   path: "/socket",
+    //   transports: ['websocket', 'polling'] // Good practice to specify transports
+    // });
 
     this.setupConnectionHandlers();
   }
